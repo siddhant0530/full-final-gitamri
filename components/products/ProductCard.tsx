@@ -1,0 +1,136 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import ProductBadge from "./ProductBadge";
+import { Product } from "@/types/product";
+import { formatPrice } from "@/lib/formatPrice";
+import { useCart } from "@/lib/cart-context";
+
+export default function ProductCard({ product }: { product: Product }) {
+  const { addToCart } = useCart();
+  const router = useRouter();
+  const [activeVariant, setActiveVariant] = useState(0);
+
+  if (product.comingSoon) {
+    return (
+      <div className="flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-amber-300 bg-amber-50/40 p-10 text-center">
+        <span className="rounded-full bg-zinc-900/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
+          Coming Soon
+        </span>
+        <h3 className="mt-5 font-display text-xl font-bold text-zinc-800">{product.name}</h3>
+        <p className="mt-2 text-sm leading-6 text-zinc-500">{product.shortDescription}</p>
+      </div>
+    );
+  }
+
+  const variant = product.variants?.[activeVariant];
+  const displayPrice = variant ? variant.price : product.price;
+  const displayMrp = variant?.mrp;
+
+  return (
+    <div
+      onClick={() => router.push(`/products/${product.slug}`)}
+      className="group cursor-pointer overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-300 hover:shadow-xl"
+    >
+      <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white p-4">
+        {product.bestSeller && (
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+    🏆 Best Seller
+  </span>
+)}
+{product.mostLoved && (
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-gradient-to-r from-pink-500 to-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+    ❤️ Most Loved
+  </span>
+)}
+{product.newlyAdded && (
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+    ✨ Newly Added
+  </span>
+)}
+{product.topRated && (
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+    ⭐ Top Rated
+  </span>
+)}
+        <div
+          className={`relative mx-auto h-40 w-full transition-transform duration-500 ease-out group-hover:scale-105 ${
+            !product.inStock ? "grayscale opacity-60" : ""
+          }`}
+        >
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 90vw, (max-width: 1200px) 45vw, 30vw"
+            className="object-contain"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="line-clamp-1 font-display text-base font-bold tracking-tight text-zinc-900">
+            {product.name}
+          </h3>
+
+          <ProductBadge
+            text={product.inStock ? "In Stock" : "Out of Stock"}
+            variant={product.inStock ? "success" : "danger"}
+          />
+        </div>
+
+        <p className="line-clamp-2 min-h-[40px] text-sm leading-5 text-zinc-500">
+          {product.shortDescription}
+        </p>
+
+        {product.variants && product.variants.length > 1 && (
+          <div className="flex gap-2">
+            {product.variants.map((v, i) => (
+              <button
+                key={v.weight}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveVariant(i);
+                }}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                  i === activeVariant
+                    ? "border-amber-500 bg-amber-500 text-white"
+                    : "border-zinc-200 text-zinc-600 hover:border-amber-300"
+                }`}
+              >
+                {v.weight}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-2">
+          <div className="flex items-baseline gap-2">
+            <span className="bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-lg font-extrabold text-transparent">
+              {formatPrice(displayPrice)}
+            </span>
+            {displayMrp && displayMrp > displayPrice && (
+              <span className="text-sm text-zinc-400 line-through">
+                {formatPrice(displayMrp)}
+              </span>
+            )}
+          </div>
+
+          <button
+            disabled={!product.inStock}
+            onClick={(e) => {
+              e.stopPropagation();
+              addToCart(product, 1, variant ? { weight: variant.weight, price: variant.price } : undefined);
+            }}
+            className="rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:scale-105 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

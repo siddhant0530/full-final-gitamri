@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body{
+  margin: 0;
+  font-family: var(--font-sans), Arial, sans-serif;
+  background:#F6F2EA;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s ease-out both;
+}
+
+/* Dual-thumb price range slider (components/products/PriceRangeSlider.tsx).
+   Native <input type="range"> pseudo-elements can't be styled with Tailwind
+   utility classes, so this small bit of plain CSS is required. */
+.range-thumb {
+  pointer-events: none;
+}
+.range-thumb::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #f59e0b;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.range-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #f59e0b;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.range-thumb::-webkit-slider-runnable-track {
+  background: transparent;
+}
+.range-thumb::-moz-range-track {
+  background: transparent;
+}

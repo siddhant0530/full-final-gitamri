@@ -1,0 +1,11 @@
+{
+  "name": "Gitamri Maaji",
+  "short_name": "Gitamri Maaji",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "theme_color": "#123524",
+  "background_color": "#123524",
+  "display": "standalone"
+}

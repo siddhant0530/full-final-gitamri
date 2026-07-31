@@ -1,0 +1,29 @@
+# dependencies
+/node_modules
+
+# next.js build output
+/.next/
+/out/
+
+# production
+/build
+
+# env files — NEVER commit real secrets (Razorpay, Supabase, Delhivery, admin password)
+.env
+.env*.local
+!.env.local.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+
+.vercel
+.env*
