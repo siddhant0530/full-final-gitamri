@@ -5,6 +5,11 @@ import { formatPrice } from "@/lib/formatPrice";
 import type { Order, OrderStatus } from "@/lib/order-store";
 import type { Review, ReviewStatus } from "@/lib/reviews-store";
 
+function toWhatsAppNumber(phone: string): string {
+  const digits = phone.replace(/\D/g, "").replace(/^0+/, "");
+  return digits.length === 10 ? `91${digits}` : digits;
+}
+
 const STATUS_OPTIONS: OrderStatus[] = [
   "PENDING",
   "PROCESSING",
@@ -331,12 +336,24 @@ export default function AdminPage() {
                         <span className="truncate text-xs text-amber-800">
                           {reviewLinks[order.trackingId]}
                         </span>
-                        <button
-                          onClick={() => copyLink(reviewLinks[order.trackingId])}
-                          className="shrink-0 rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-700"
-                        >
-                          Copy review link
-                        </button>
+                        <div className="flex shrink-0 gap-2">
+                          <button
+                            onClick={() => copyLink(reviewLinks[order.trackingId])}
+                            className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-700"
+                          >
+                            Copy link
+                          </button>
+                          <button
+                            onClick={() => {
+                              const phone = toWhatsAppNumber(order.customer.phone);
+                              const message = `Hi ${order.customer.name}, thank you for your order from Gitamri Maaji! We'd love to hear your feedback — could you share a quick review here: ${reviewLinks[order.trackingId]}`;
+                              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+                            }}
+                            className="rounded-full bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
+                          >
+                            Send via WhatsApp
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

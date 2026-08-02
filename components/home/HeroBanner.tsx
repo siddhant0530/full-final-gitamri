@@ -37,16 +37,7 @@ export default function HeroBanner() {
             recipes and uncompromising quality.
           </p>
 
-          <div className="mt-10 flex flex-wrap gap-4">
-            <a
-              href={`https://wa.me/${company.whatsappNumber}?text=${encodeURIComponent("Hi Gitamri Maaji, I'd like to place an order.")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-green-600 px-7 py-4 font-semibold text-white shadow-lg transition hover:scale-105 hover:bg-green-700"
-            >
-              <WhatsAppIcon size={20} /> Order on WhatsApp
-            </a>
-
+      <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/products"
               className="inline-flex items-center gap-2 rounded-full border-2 border-amber-400 bg-white/5 px-7 py-4 font-semibold text-amber-200 backdrop-blur transition hover:bg-amber-400 hover:text-[#123524]"
