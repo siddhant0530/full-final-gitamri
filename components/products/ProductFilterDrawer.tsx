@@ -130,19 +130,17 @@ export default function ProductFilterDrawer({
               Availability
             </h3>
             <div className="space-y-2">
-              {(["inStock", "outOfStock"] as const).map((key) => (
-                <label key={key} className="flex items-center gap-2.5 text-sm text-zinc-700">
-                  <input
-                    type="checkbox"
-                    checked={draft.availability.has(key)}
-                    onChange={() =>
-                      setDraft((d) => ({ ...d, availability: toggleSetValue(d.availability, key) }))
-                    }
-                    className="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500"
-                  />
-                  {key === "inStock" ? "In Stock" : "Out of Stock"}
-                </label>
-              ))}
+              <label className="flex items-center gap-2.5 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  checked={draft.availability.has("inStock")}
+                  onChange={() =>
+                    setDraft((d) => ({ ...d, availability: toggleSetValue(d.availability, "inStock") }))
+                  }
+                  className="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500"
+                />
+                In Stock
+              </label>
             </div>
           </div>
 
@@ -202,36 +200,6 @@ export default function ProductFilterDrawer({
               ))}
             </div>
           </div>
-
-          {/* Pack Size — dynamically from actual product data */}
-          {packSizeOptions.length > 0 && (
-            <div>
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-zinc-800">
-                Pack Size
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {packSizeOptions.map((size) => {
-                  const active = draft.packSizes.has(size);
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() =>
-                        setDraft((d) => ({ ...d, packSizes: toggleSetValue(d.packSizes, size) }))
-                      }
-                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                        active
-                          ? "border-amber-500 bg-amber-500 text-white"
-                          : "border-zinc-200 text-zinc-600 hover:border-amber-300"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex gap-3 border-t border-zinc-100 px-6 py-5">

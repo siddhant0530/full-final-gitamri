@@ -66,7 +66,7 @@ export default function ProductHero({ product, reviews }: { product: Product; re
         </div>
       </div>
     </section>
-    <ProductDetailsAccordion product={product} />
+    <ProductDetailsAccordion product={product} selectedWeight={displayWeight} />
     <ProductReviewsList reviews={reviews} />
     </>
   );

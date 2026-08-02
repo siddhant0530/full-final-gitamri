@@ -38,7 +38,13 @@ function packSizesOf(product: Product): string[] {
 
 // Accepts an optional initial category slug (e.g. from a ?category= URL
 // param) so links from the navbar/homepage land on the right filter.
-export default function ProductGrid({ initialCategory }: { initialCategory?: string }) {
+export default function ProductGrid({
+  initialCategory,
+  initialSearch,
+}: {
+  initialCategory?: string;
+  initialSearch?: string;
+}) {
   const priceBounds = useMemo(() => {
     const prices = products.filter((p) => !p.comingSoon).map(displayPrice).filter((n) => n > 0);
     if (prices.length === 0) return { min: 0, max: 1000 };
@@ -88,6 +94,12 @@ export default function ProductGrid({ initialCategory }: { initialCategory?: str
       );
       list = list.filter((p) => names.has(p.category));
     }
+    if (initialSearch && initialSearch.trim()) {
+      const q = initialSearch.trim().toLowerCase();
+      list = list.filter(
+        (p) => p.name.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)
+      );
+    }
 
     if (filters.availability.size > 0) {
       list = list.filter((p) => {
@@ -112,7 +124,7 @@ export default function ProductGrid({ initialCategory }: { initialCategory?: str
     }
 
     return list;
-  }, [filters]);
+  }, [filters, initialSearch]);
 
   const sorted = useMemo(() => {
     const list = filtered.slice();

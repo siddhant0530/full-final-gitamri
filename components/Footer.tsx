@@ -49,12 +49,6 @@ export default async function Footer() {
             className="inline-flex items-center gap-2 rounded-full bg-green-600 px-8 py-4 text-white font-semibold">
             <Phone size={20}/> Order on WhatsApp
           </a>
-          <div>
-            <Link href="/products"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-amber-500 px-8 py-4 font-semibold text-[#123524]">
-              <ShoppingBag size={20}/> Explore Our Collection
-            </Link>
-          </div>
         </div>
 
         <div className="text-center mt-20">

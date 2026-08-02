@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, ShoppingBag, ShoppingCart, User } from "lucide-react";
+import { Menu, X, ShoppingBag, ShoppingCart, User, Search } from "lucide-react";
+import { useRouter } from "next/navigation"
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { useCart } from "@/lib/cart-context";
 import { company } from "@/data/company";
@@ -14,6 +15,14 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const { totalItems } = useCart();
+  const router = useRouter();
+const [searchQuery, setSearchQuery] = useState("");
+
+function handleSearch(e: React.FormEvent) {
+  e.preventDefault();
+  const q = searchQuery.trim();
+  router.push(q ? `/products?search=${encodeURIComponent(q)}` : "/products");
+}
   const SHOW_CATEGORIES = false; //set to true to bring back the categories menu 
 
   useEffect(() => {
@@ -103,13 +112,19 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           
-          <Link
-            href="/products"
-            className="inline-flex items-center gap-2 rounded-full border border-amber-400 px-5 py-3 text-amber-300 hover:bg-amber-400 hover:text-[#123524] transition"
+          <form
+            onSubmit={handleSearch}
+            className="flex items-center gap-2 rounded-full border border-amber-400 px-5 py-3 text-amber-300 focus-within:bg-white/5"
           >
-            <ShoppingBag size={18} />
-            Explore Collection
-          </Link>
+            <Search size={18} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products..."
+              className="w-36 bg-transparent text-sm text-white placeholder:text-amber-200/60 focus:outline-none caret-white cursor-text"
+            />
+          </form>
 
           <Link
             href="/cart"
@@ -133,12 +148,19 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <button
-          className="md:hidden text-white"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={30} /> : <Menu size={30} />}
-        </button>
+        <div className="flex items-center gap-4 md:hidden">
+          <Link href="/cart" aria-label="Cart" className="relative text-white">
+            <ShoppingCart size={26} />
+            {totalItems > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[11px] font-bold text-white">
+                {totalItems}
+              </span>
+            )}
+          </Link>
+          <button onClick={() => setOpen(!open)} className="text-white">
+            {open ? <X size={30} /> : <Menu size={30} />}
+          </button>
+        </div>
       </nav>
 
       {open && (
@@ -154,6 +176,7 @@ export default function Navbar() {
             </Link>
           ))}
 
+          {SHOW_CATEGORIES && (
           <div className="border-t border-white/10 px-6 py-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-300">
               Categories
@@ -172,6 +195,7 @@ export default function Navbar() {
               ))}
             </div>
           </div>
+          )}
 
           <div className="p-6 space-y-3">
             <a
@@ -182,20 +206,22 @@ export default function Navbar() {
             >
               Order on WhatsApp
             </a>
-            <Link
-              href="/products"
-              onClick={() => setOpen(false)}
-              className="block rounded-full border border-amber-400 py-3 text-center text-amber-300"
+            <form
+              onSubmit={(e) => {
+                handleSearch(e);
+                setOpen(false);
+              }}
+              className="flex items-center gap-2 rounded-full border border-amber-400 px-4 py-3 text-amber-300"
             >
-              Explore Collection
-            </Link>
-            <Link
-              href="/cart"
-              onClick={() => setOpen(false)}
-              className="block rounded-full border border-amber-400 py-3 text-center text-amber-300"
-            >
-              Cart {totalItems > 0 ? `(${totalItems})` : ""}
-            </Link>
+              <Search size={18} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="w-full bg-transparent text-sm text-white placeholder:text-amber-200/60 focus:outline-none caret-white cursor-text"
+              />
+            </form>
             <Link
               href="/login"
               onClick={() => setOpen(false)}

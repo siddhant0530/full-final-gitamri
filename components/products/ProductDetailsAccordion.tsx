@@ -5,7 +5,7 @@ import { Product } from "@/types/product";
 
 const TABS = ["Item Details", "Ingredients", "Know Your Pickle"] as const;
 
-export default function ProductDetailsAccordion({ product }: { product: Product }) {
+export default function ProductDetailsAccordion({ product, selectedWeight }: { product: Product; selectedWeight?: string }) {
   const [active, setActive] = useState<(typeof TABS)[number]>("Item Details");
 
   return (
@@ -29,7 +29,7 @@ export default function ProductDetailsAccordion({ product }: { product: Product 
       <div className="pt-6 text-zinc-600">
         {active === "Item Details" && (
           <ul className="space-y-1 text-sm">
-            <li><span className="font-medium text-zinc-800">Weight:</span> {product.weight}</li>
+            <li><span className="font-medium text-zinc-800">Weight:</span> {selectedWeight ?? product.weight}</li>
             <li><span className="font-medium text-zinc-800">Shelf Life:</span> {product.shelfLife}</li>
             <li><span className="font-medium text-zinc-800">Storage:</span> {product.storage}</li>
           </ul>

@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; search?: string }>;
 }) {
-  const { category } = await searchParams;
+  const { category, search } = await searchParams;
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
@@ -21,7 +21,7 @@ export default async function ProductsPage({
       <p className="mb-8 text-zinc-600">
         Pickles • Masalas • Pulses • Dry Fruits • Traditional Foods
       </p>
-      <ProductGrid initialCategory={category} />
+      <ProductGrid initialCategory={category} initialSearch={search} />
     </main>
   );
 }
