@@ -28,7 +28,7 @@ export default function HeroBanner() {
           </p>
 
           <p className="mt-4 text-xl text-amber-100/90 md:text-2xl">
-            Pickles • Masalas • Pulses • Dry Fruits • Traditional Foods
+            Pickles • Spices • Pulses • Dry Fruits • Traditional Foods
           </p>
 
           <p className="mt-6 max-w-xl text-base leading-8 text-white/75 md:text-lg">
