@@ -18,6 +18,10 @@ export default function ProductGallery({
 }) {
   const [active, setActive] = useState(0);
   const activeSrc = images[active];
+
+  const goPrev = () => setActive((i) => (i - 1 + images.length) % images.length);
+  const goNext = () => setActive((i) => (i + 1) % images.length);
+
   if (!activeSrc) {
   return (
     <div className="rounded-xl border p-8 text-center">
@@ -27,8 +31,8 @@ export default function ProductGallery({
 }
 
   return (
-    <div className="flex gap-3">
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col-reverse gap-3 md:flex-row">
+      <div className="flex gap-2 overflow-x-auto md:flex-col md:overflow-visible">
         {images.map((img, i) => (
           <button
             key={img}
@@ -52,8 +56,8 @@ export default function ProductGallery({
 
       <div className="relative aspect-square w-full max-w-sm overflow-hidden rounded-xl mx-auto bg-zinc-50">
         {isVideo(activeSrc) ? (
-          <video
-            src={activeSrc}
+         <video
+            src={encodeURI(activeSrc)}
             controls
             className="h-full w-full object-contain"
           />
@@ -64,10 +68,29 @@ export default function ProductGallery({
             fill
             priority
             sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-contain"
-          />
-        )}
+           className="object-contain"
+            />
+          )}
+
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={goPrev}
+                aria-label="Previous image"
+                className="absolute left-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-zinc-800 shadow hover:bg-white"
+              >
+                ‹
+              </button>
+              <button
+                onClick={goNext}
+                aria-label="Next image"
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-zinc-800 shadow hover:bg-white"
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
       </div>
-    </div>
   );
 }
