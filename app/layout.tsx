@@ -8,6 +8,7 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL } from "@/lib/site-config";
 import { company } from "@/data/company";
+import { Toaster } from "sonner";
 
 // Premium serif for headings + a clean grotesque for body text —
 // self-hosted by Next.js at build time (no extra network calls at runtime).
@@ -82,6 +83,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="pt-[88px]">{children}</div>
           <Footer />
           <WhatsAppButton />
+
+          <Toaster
+            position="bottom-center"
+            richColors
+            duration={2500}
+            closeButton
+          />
         </CartProvider>
       </body>
     </html>
