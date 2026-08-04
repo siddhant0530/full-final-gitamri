@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import Link from "next/link";
 import Image from "next/image";
 import ProductBadge from "./ProductBadge";
 import { Product } from "@/types/product";
@@ -28,12 +30,39 @@ export default function ProductCard({ product }: { product: Product }) {
   const variant = product.variants?.[activeVariant];
   const displayPrice = variant ? variant.price : product.price;
   const displayMrp = variant?.mrp;
+  function handleAddToCart() {
+    addToCart(
+      product,
+      1,
+      variant
+        ? {
+            weight: variant.weight,
+            price: variant.price,
+          }
+        : undefined
+    );
+
+    toast.success("Added to Cart", {
+      description: `${product.name} added successfully.`,
+      action: {
+        label: "View Cart",
+        onClick: () => router.push("/cart"),
+      },
+    });
+  }
 
   return (
-    <div
-      onClick={() => router.push(`/products/${product.slug}`)}
-      className="group cursor-pointer overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-300 hover:shadow-xl"
-    >
+    <div className="group relative overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-300 hover:shadow-xl">
+      {/*
+        The whole card used to be a <div onClick={...router.push}> — that
+        works for mouse clicks but is invisible to search engine crawlers,
+        which discover pages via real <a href> links, not JS click handlers.
+        Wrapping the non-interactive parts (image, title, description) in a
+        real Link fixes that. Variant-select and Add-to-Cart stay outside
+        the Link as plain <button>s below, since <button> isn't valid
+        nested inside <a>.
+      */}
+      <Link href={`/products/${product.slug}`} className="block">
       <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white p-4">
         {product.bestSeller && (
   <span className="absolute left-4 top-4 z-10 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow">
@@ -85,16 +114,16 @@ export default function ProductCard({ product }: { product: Product }) {
         <p className="line-clamp-2 min-h-[40px] text-sm leading-5 text-zinc-500">
           {product.shortDescription}
         </p>
+      </div>
+      </Link>
 
+      <div className="space-y-2 px-4 pb-4">
         {product.variants && product.variants.length > 1 && (
           <div className="flex gap-2">
             {product.variants.map((v, i) => (
               <button
                 key={v.weight}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveVariant(i);
-                }}
+                onClick={() => setActiveVariant(i)}
                 className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                   i === activeVariant
                     ? "border-amber-500 bg-amber-500 text-white"
@@ -121,10 +150,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
           <button
             disabled={!product.inStock}
-            onClick={(e) => {
-              e.stopPropagation();
-              addToCart(product, 1, variant ? { weight: variant.weight, price: variant.price } : undefined);
-            }}
+            onClick={handleAddToCart}
             className="rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:scale-105 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Add to Cart
