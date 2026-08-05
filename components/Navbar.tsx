@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, ShoppingBag, ShoppingCart, User, Search } from "lucide-react";
+import { Menu, X, ShoppingCart, User, Search } from "lucide-react";
 import { useRouter } from "next/navigation"
-import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { useCart } from "@/lib/cart-context";
 import { company } from "@/data/company";
 import { categories } from "@/data/categories";
