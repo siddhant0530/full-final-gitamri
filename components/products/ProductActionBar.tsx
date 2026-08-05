@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Product } from "@/types/product";
 import { useCart } from "@/lib/cart-context";
 import { company } from "@/data/company";
@@ -20,6 +21,17 @@ export default function ProductActionBar({
   function handleBuyNow() {
     addToCart(product, qty, variant);
     router.push("/checkout");
+  }
+  function handleAddToCart() {
+    addToCart(product, qty, variant);
+
+    toast.success("Added to Cart", {
+      description: `${qty} × ${product.name} added successfully.`,
+      action: {
+        label: "View Cart",
+        onClick: () => router.push("/cart"),
+      },
+    });
   }
 
   const whatsappHref = `https://wa.me/${company.whatsappNumber}?text=${encodeURIComponent(
@@ -54,7 +66,7 @@ export default function ProductActionBar({
         </button>
         <button
           disabled={!product.inStock}
-          onClick={() => addToCart(product, qty, variant)}
+          onClick={handleAddToCart}
           className="rounded border border-green-700 px-6 py-3 font-semibold text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Add to Cart

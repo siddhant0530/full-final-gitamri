@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, Leaf, ChefHat, Star, Truck } from "lucide-react";
+import { ShoppingBag, Leaf, ChefHat, Star, Truck, Home } from "lucide-react";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { company } from "@/data/company";
 
@@ -47,10 +47,10 @@ export default function HeroBanner() {
           </div>
 
           <div className="mt-12 grid grid-cols-2 gap-4 text-sm text-white/80 md:grid-cols-4">
-            <div className="flex items-center gap-2"><Leaf size={18} className="text-amber-300" />Pure ingredients</div>
-            <div className="flex items-center gap-2"><ChefHat size={18} className="text-amber-300" />Homemade</div>
-            <div className="flex items-center gap-2"><Star size={18} className="text-amber-300" />Premium</div>
-            <div className="flex items-center gap-2"><Truck size={18} className="text-amber-300" />Pan India</div>
+            <div className="flex items-center gap-2"><Star size={22} className="text-amber-300" />No Presevatives</div>
+            <div className="flex items-center gap-2">< Home size={28} className="text-amber-300" />Homemade & Hygienic</div>
+            <div className="flex items-center gap-2"><Leaf size={22} className="text-amber-300" />Fresh Ingredients</div>
+            <div className="flex items-center gap-2"><Truck size={26} className="text-amber-300" />Pan India</div>
           </div>
         </div>
 
@@ -66,7 +66,7 @@ export default function HeroBanner() {
     }}
   >
     <Image
-      src="/hero-maaji.jpg.jpeg"
+      src="/hero-maaji.jpeg"
       alt="Gitamri Maaji with pickle jars"
       width={500}
       height={700}

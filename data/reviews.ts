@@ -24,8 +24,7 @@ export const reviews: Review[] = [
     productSlug: "grated-mango-pickle",
     customerName: "Verified Customer",
     rating: 5,
-    text: "Loved the Mango Chutney and Red Chilli Pickle both — great taste and quality.",
-    photo: "/verified customer.png.jpeg",
+    text: "Loved the Mango Chutney — great taste and quality.",
     homepageFeatured: true,
   },
   {
@@ -63,4 +62,14 @@ export const reviews: Review[] = [
   { id: "19", productSlug: "mango-pickle", customerName: "Vijit Rathod", rating: 5, text: "Fresh ingredients and rich traditional taste. A product I'd happily recommend." },
   { id: "20", productSlug: "grated-mango-pickle", customerName: "Ishan Bargav", rating: 4, text: "Very satisfying taste with good spice balance. Great product overall." },
   { id: "21", productSlug: "mango-pickle", customerName: "Phuntsok Bhutia", rating: 5, text: "Authentic flavour, premium quality, and careful packaging. Highly impressed." },
+
+  {
+  id: "22",
+  productSlug: "mixed-pickle",
+  customerName: "Vanita Mane",
+  rating: 5,
+  text: "good product one can buy i tried 2 products and both are good",
+  photo: "/vanita-mane.jpg.jpeg",
+  homepageFeatured: false,
+},
 ];
