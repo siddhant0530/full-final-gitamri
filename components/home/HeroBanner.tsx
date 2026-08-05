@@ -99,7 +99,9 @@ export default function HeroBanner() {
           {/* Description */}
 
           <p className="mt-6 max-w-xl text-lg leading-9 text-white/80">
-            From Maaji's hands to your table — a full range of authentic Indian foods prepared with carefully selected ingredients, traditional recipes and uncompromising quality.
+            From Maaji&apos;s hands to your table — a full range of authentic Indian
+            foods prepared with carefully selected ingredients, traditional recipes
+            and uncompromising quality.
           </p>
 
           {/* Buttons */}
