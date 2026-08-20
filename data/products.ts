@@ -39,7 +39,7 @@ knowYourPickle:"Every jar of Gitamri Maaji Mango Pickle begins the way it always
 {
 id:"red-chilli-pickle",
 slug:"red-chilli-pickle",
-name:"Red Chilli Pickle",
+name:"Red Chilli Pickle / Banarasi Bharwa Laal Mirch",
 category:"Pickles & Chutneys",
 description:"Premium red chilli pickle in mustard oil.",
 shortDescription:"Spicy homemade pickle.",

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
 
-  const result = await createDelhiveryShipment({
+ const result = await createDelhiveryShipment({
     orderId: order.trackingId,
     name: order.customer.name,
     address: order.customer.address,
@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
     phone: order.customer.phone,
     paymentMode: order.paymentMethod === "COD" ? "COD" : "Prepaid",
     amount: order.subtotal,
+    items: order.items.map((i) => ({ name: i.name, quantity: i.quantity })),
   });
 
   if (!result.success) {

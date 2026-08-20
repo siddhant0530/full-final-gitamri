@@ -5,6 +5,7 @@ import { getOrders } from "@/lib/order-store";
 interface SubmitBody {
   token: string;
   customerName: string;
+  photo?: string;
   reviews: { productId: string; rating: number; text: string }[];
 }
 
@@ -13,7 +14,7 @@ interface SubmitBody {
 // nothing here goes public until an admin approves it.
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as SubmitBody;
-  const { token, customerName, reviews } = body;
+  const { token, customerName, photo, reviews } = body;
 
   if (!token || !customerName?.trim() || !reviews?.length) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
           customerName: customerName.trim(),
           rating: r.rating,
           text: r.text.trim(),
+          photo: photo || undefined,
         })
       )
     );

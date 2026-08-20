@@ -39,6 +39,39 @@ export default function ReviewSubmissionForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPhotoPreview(URL.createObjectURL(file));
+    setUploadingPhoto(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/reviews/upload-photo", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Could not upload photo. Please try again.");
+        setPhotoPreview(null);
+        return;
+      }
+      setPhotoUrl(data.url);
+    } catch {
+      setError("Could not upload photo. Please check your connection and try again.");
+      setPhotoPreview(null);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
 
   function updateDraft(productId: string, field: "rating" | "text", value: number | string) {
     setDrafts((d) => ({ ...d, [productId]: { ...d[productId], [field]: value } }));
@@ -63,7 +96,12 @@ export default function ReviewSubmissionForm({
       const res = await fetch("/api/reviews/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, customerName: customerName.trim(), reviews }),
+        body: JSON.stringify({
+          token,
+          customerName: customerName.trim(),
+          photo: photoUrl || undefined,
+          reviews,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -103,6 +141,31 @@ export default function ReviewSubmissionForm({
         />
       </div>
 
+      <div>
+        <label className="block text-sm font-semibold text-zinc-800">
+          Add a photo <span className="font-normal text-zinc-400">(optional)</span>
+        </label>
+        <div className="mt-2 flex items-center gap-4">
+          {photoPreview && (
+            <img
+              src={photoPreview}
+              alt="Your upload"
+              className="h-20 w-20 rounded-lg object-cover"
+            />
+          )}
+          <label className="cursor-pointer rounded-lg border border-dashed border-gray-300 px-4 py-3 text-sm text-zinc-600 hover:border-amber-400">
+            {uploadingPhoto ? "Uploading…" : photoUrl ? "Change photo" : "Upload photo"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              onChange={handlePhotoSelect}
+              className="hidden"
+              disabled={uploadingPhoto}
+            />
+          </label>
+        </div>
+      </div>
+
       {items.map((item) => (
         <div key={item.productId} className="rounded-2xl border border-gray-200 p-5">
           <p className="font-semibold text-[#123524]">{item.name}</p>
@@ -126,7 +189,7 @@ export default function ReviewSubmissionForm({
 
       <button
         onClick={handleSubmit}
-        disabled={submitting}
+        disabled={submitting || uploadingPhoto}
         className="w-full rounded-full bg-green-700 py-3 font-semibold text-white transition hover:bg-green-800 disabled:opacity-60"
       >
         {submitting ? "Submitting…" : "Submit Review"}
