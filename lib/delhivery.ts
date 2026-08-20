@@ -26,6 +26,7 @@ interface ShipmentInput {
   phone: string;
   paymentMode: "COD" | "Prepaid";
   amount: number; // amount to collect if COD, else 0
+  items: { name: string; quantity: number }[];
 }
 
 export interface ShipmentResult {
@@ -45,6 +46,12 @@ export async function createDelhiveryShipment(input: ShipmentInput): Promise<Shi
     };
   }
 
+ const productsDesc = input.items
+    .map((i) => `${i.name} x${i.quantity}`)
+    .join(", ")
+    .slice(0, 500); // Delhivery caps this field's length
+  const totalQuantity = input.items.reduce((sum, i) => sum + i.quantity, 0);
+
   const payload = {
     shipments: [
       {
@@ -56,9 +63,10 @@ export async function createDelhiveryShipment(input: ShipmentInput): Promise<Shi
         order: input.orderId,
         payment_mode: input.paymentMode,
         cod_amount: input.paymentMode === "COD" ? input.amount : 0,
-        products_desc: "Homemade pickles / food products",
+        total_amount: input.amount,
+        products_desc: productsDesc,
         cod_amount_currency: "INR",
-        quantity: 1,
+        quantity: totalQuantity,
       },
     ],
     pickup_location: { name: PICKUP_LOCATION },
