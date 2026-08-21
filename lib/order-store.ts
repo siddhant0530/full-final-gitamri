@@ -242,7 +242,17 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
     `[MOCK EMAIL] Order confirmation would be sent to ${input.customer.email} with tracking ID ${trackingId}.`
   );
 
-  return toOrder(orderRow, input.items.map((item) => ({ ...item, id: "", orderId })));
+  return toOrder(
+    orderRow,
+    input.items.map((item) => ({
+      id: "",
+      orderId,
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+      weight: item.weight ?? null,
+    }))
+  );
 }
 
 export async function updateOrderStatus(
