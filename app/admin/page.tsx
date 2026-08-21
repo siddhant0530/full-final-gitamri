@@ -5,11 +5,6 @@ import { formatPrice } from "@/lib/formatPrice";
 import type { Order, OrderStatus } from "@/lib/order-store";
 import type { Review, ReviewStatus } from "@/lib/reviews-store";
 
-function toWhatsAppNumber(phone: string): string {
-  const digits = phone.replace(/\D/g, "").replace(/^0+/, "");
-  return digits.length === 10 ? `91${digits}` : digits;
-}
-
 const STATUS_OPTIONS: OrderStatus[] = [
   "PENDING",
   "PROCESSING",
@@ -292,9 +287,19 @@ export default function AdminPage() {
                         <span>{formatPrice(item.price * item.quantity)}</span>
                       </div>
                     ))}
-                    <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 font-bold">
-                      <span>Total</span>
+                    <div className="mt-2 flex justify-between border-t border-gray-200 pt-2">
+                      <span>Subtotal</span>
                       <span>{formatPrice(order.subtotal)}</span>
+                    </div>
+                    {order.discount > 0 && (
+                      <div className="flex justify-between text-green-700">
+                        <span>Prepaid Discount</span>
+                        <span>-{formatPrice(order.discount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-t border-gray-200 pt-2 font-bold">
+                      <span>Total</span>
+                      <span>{formatPrice(order.total)}</span>
                     </div>
                     <p className="mt-1 text-zinc-500">
                       {order.paymentMethod === "COD" ? "Cash on Delivery" : "Online Payment"} ·{" "}
@@ -336,24 +341,12 @@ export default function AdminPage() {
                         <span className="truncate text-xs text-amber-800">
                           {reviewLinks[order.trackingId]}
                         </span>
-                        <div className="flex shrink-0 gap-2">
-                          <button
-                            onClick={() => copyLink(reviewLinks[order.trackingId])}
-                            className="rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-700"
-                          >
-                            Copy link
-                          </button>
-                          <button
-                            onClick={() => {
-                              const phone = toWhatsAppNumber(order.customer.phone);
-                              const message = `Hi ${order.customer.name}, thank you for your order from Gitamri Maaji! We'd love to hear your feedback — could you share a quick review here: ${reviewLinks[order.trackingId]}`;
-                              window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
-                            }}
-                            className="rounded-full bg-green-600 px-3 py-1 text-xs font-semibold text-white hover:bg-green-700"
-                          >
-                            Send via WhatsApp
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => copyLink(reviewLinks[order.trackingId])}
+                          className="shrink-0 rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-700"
+                        >
+                          Copy review link
+                        </button>
                       </div>
                     )}
                   </div>

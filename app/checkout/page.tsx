@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/formatPrice";
+import { prepaidDiscountRateForWeight } from "@/lib/pricing";
 
 // Minimal shape of the Razorpay Checkout.js constructor this page actually
 // uses — the full SDK has no official types, so this covers just what's
@@ -16,6 +17,11 @@ interface RazorpaySuccessResponse {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
+}
+interface RazorpayPaymentInfo {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
 }
 interface RazorpayOptions {
   key: string | undefined;
@@ -40,6 +46,15 @@ export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
   const router = useRouter();
 
+  // Cosmetic-only preview of the weight-tiered prepaid discount (15% on
+  // 220g jars, 12% on 500g jars). The actual charge is always
+  // recalculated server-side — see /api/payments/razorpay/create-order
+  // and /api/orders.
+  const discountPreview = items.reduce(
+    (sum, item) => sum + Math.round(item.price * item.quantity * prepaidDiscountRateForWeight(item.weight)),
+    0
+  );
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -56,7 +71,7 @@ export default function CheckoutPage() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-  async function payWithRazorpay(): Promise<{ razorpayOrderId: string; razorpayPaymentId: string } | null> {
+  async function payWithRazorpay(): Promise<RazorpayPaymentInfo | null> {
     // Create a Razorpay order on the server first. The server recomputes
     // the amount from the product catalog using productId/weight/quantity
     // — it does not trust a client-supplied total.
@@ -109,6 +124,10 @@ export default function CheckoutPage() {
             resolve({
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
+              // Passed through to /api/orders so it can independently
+              // re-verify the signature before applying the prepaid
+              // discount or marking the order Paid — see that route.
+              razorpaySignature: response.razorpay_signature,
             });
           } else {
             reject(new Error("Payment verification failed."));
@@ -137,7 +156,7 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
-      let paymentInfo: { razorpayOrderId: string; razorpayPaymentId: string } | null = null;
+      let paymentInfo: RazorpayPaymentInfo | null = null;
 
       if (paymentMethod === "ONLINE") {
         paymentInfo = await payWithRazorpay();
@@ -156,6 +175,7 @@ export default function CheckoutPage() {
           paymentMethod,
           razorpayOrderId: paymentInfo?.razorpayOrderId,
           razorpayPaymentId: paymentInfo?.razorpayPaymentId,
+          razorpaySignature: paymentInfo?.razorpaySignature,
         }),
       });
 
@@ -250,12 +270,12 @@ export default function CheckoutPage() {
                 checked={paymentMethod === "ONLINE"}
                 onChange={() => setPaymentMethod("ONLINE")}
               />
-              Pay Online (Card / UPI / Netbanking)
+              Pay Online (Card / UPI / Netbanking) — Get up to 15% off
             </label>
           </div>
           {paymentMethod === "ONLINE" && (
             <p className="text-sm text-zinc-500">
-              You&apos;ll be prompted to complete payment via Razorpay (UPI, card, netbanking, or wallet) before your order is placed.
+              You&apos;ll be prompted to complete payment via Razorpay (UPI, card, netbanking, or wallet) before your order is placed. A prepaid discount (15% on 220g jars, 12% on 500g jars) is applied automatically.
             </p>
           )}
 
@@ -284,10 +304,26 @@ export default function CheckoutPage() {
               </div>
             ))}
           </div>
-          <div className="mt-4 flex justify-between border-t border-gray-200 pt-4 font-bold">
+          <div className="mt-4 flex justify-between border-t border-gray-200 pt-4">
             <span>Subtotal</span>
             <span>{formatPrice(subtotal)}</span>
           </div>
+          {paymentMethod === "ONLINE" && (
+            <div className="flex justify-between text-green-700">
+              <span>Prepaid Discount</span>
+              <span>-{formatPrice(discountPreview)}</span>
+            </div>
+          )}
+          <div className="flex justify-between border-t border-gray-200 pt-2 font-bold">
+            <span>Total</span>
+            <span>
+              {formatPrice(paymentMethod === "ONLINE" ? subtotal - discountPreview : subtotal)}
+            </span>
+          </div>
+          {/* This preview is cosmetic only — the actual charge and any
+              discount are always recalculated server-side from the
+              catalog in /api/payments/razorpay/create-order and
+              /api/orders, never trusted from here. */}
         </div>
       </div>
     </main>

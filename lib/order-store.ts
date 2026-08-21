@@ -25,6 +25,13 @@ export interface OrderItem {
   name: string;
   price: number;
   quantity: number;
+  /**
+   * Only used transiently to compute the weight-tiered prepaid discount
+   * at order-creation time (see lib/pricing.ts) — not persisted to the
+   * OrderItem table, so it will be undefined on items read back from
+   * the database.
+   */
+  weight?: string;
 }
 
 // Matches the "OrderStatus" Postgres enum exactly.
@@ -45,6 +52,10 @@ export interface Order {
   };
   items: OrderItem[];
   subtotal: number;
+  /** 12% prepaid discount amount — 0 for COD orders. */
+  discount: number;
+  /** Actual amount owed/charged: subtotal - discount. */
+  total: number;
   paymentMethod: "COD" | "ONLINE";
   paymentStatus: "Pending" | "Paid";
   razorpayOrderId?: string;
@@ -60,7 +71,12 @@ function productName(productId: string): string {
 interface OrderRow {
   id: string;
   userId: string;
+  // NOTE: "total" here is the actual amount owed/charged — i.e. subtotal
+  // minus the prepaid discount (0 for COD). "discount" is nullable so
+  // this keeps working against older rows saved before this column
+  // existed (treated as 0 / no discount).
   total: number;
+  discount: number | null;
   status: OrderStatus;
   createdAt: string;
   trackingId: string;
@@ -108,7 +124,11 @@ function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
         price: i.price,
         quantity: i.quantity,
       })),
-    subtotal: row.total,
+    // row.total stores the actual amount charged (post-discount); the
+    // pre-discount subtotal is derived by adding the discount back.
+    subtotal: row.total + (row.discount ?? 0),
+    discount: row.discount ?? 0,
+    total: row.total,
     paymentMethod: row.paymentMethod === "ONLINE" ? "ONLINE" : "COD",
     paymentStatus: row.paymentStatus === "Paid" ? "Paid" : "Pending",
     razorpayOrderId: row.razorpayOrderId ?? undefined,
@@ -152,36 +172,26 @@ export async function getOrderByTrackingId(trackingId: string): Promise<Order | 
   return toOrder(orderRows[0], itemRows);
 }
 
-interface UserRow {
-  id: string;
-}
-
-async function findOrCreateUser(name: string, email: string): Promise<string> {
-  if (email) {
-    const existing = await dbSelect<UserRow>(
-      "User",
-      `select=id&email=eq.${encodeURIComponent(email)}&limit=1`
-    );
-    if (existing.length > 0) return existing[0].id;
-  }
-
-  const newId = randomUUID();
-  await dbInsert("User", [
-    { id: newId, name, email: email || null, updatedAt: new Date() },
-  ]);
-  return newId;
-}
 interface SaveOrderInput {
   customer: Order["customer"];
   items: OrderItem[];
   subtotal: number;
+  discount: number;
+  total: number;
   paymentMethod: "COD" | "ONLINE";
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
 }
 
 export async function saveOrder(input: SaveOrderInput): Promise<Order> {
-  const guestUserId = await findOrCreateUser(input.customer.name, input.customer.email);
+  const guestUserId = randomUUID();
+  await dbInsert("User", [
+    {
+      id: guestUserId,
+      name: input.customer.name,
+      email: input.customer.email || null,
+    },
+  ]);
 
   const trackingId = generateTrackingId();
   const orderId = randomUUID();
@@ -191,7 +201,8 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
     {
       id: orderId,
       userId: guestUserId,
-      total: input.subtotal,
+      total: input.total,
+      discount: input.discount,
       status: "PENDING",
       createdAt: new Date().toISOString(),
       trackingId,

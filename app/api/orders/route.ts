@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOrders, saveOrder } from "@/lib/order-store";
-import { resolveOrderItems, PricingError } from "@/lib/pricing";
+import { resolveOrderItems, calculateOrderTotal, PricingError } from "@/lib/pricing";
+import { verifyRazorpaySignature } from "@/lib/razorpay";
 
 // GET /api/orders -> list all orders (used by the admin panel).
 // Already gated by middleware.ts (requires a valid admin session cookie) —
@@ -19,13 +20,47 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const { customer, items: clientItems, paymentMethod, razorpayOrderId, razorpayPaymentId } = body;
+  const {
+    customer,
+    items: clientItems,
+    paymentMethod,
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+  } = body;
 
   if (!customer?.name || !customer?.phone || !customer?.address || !clientItems?.length) {
     return NextResponse.json(
       { error: "Missing required order details." },
       { status: 400 }
     );
+  }
+
+  const isOnline = paymentMethod === "ONLINE";
+
+  // For ONLINE orders, the signature is re-verified here rather than
+  // trusting that the browser's earlier /verify call succeeded. Without
+  // this, a request could claim paymentMethod: "ONLINE" with a made-up
+  // razorpayPaymentId to get both the 12% prepaid discount and a
+  // "Paid" order status without ever actually paying.
+  if (isOnline) {
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return NextResponse.json(
+        { error: "Missing payment verification details for online order." },
+        { status: 400 }
+      );
+    }
+    const validSignature = verifyRazorpaySignature({
+      orderId: razorpayOrderId,
+      paymentId: razorpayPaymentId,
+      signature: razorpaySignature,
+    });
+    if (!validSignature) {
+      return NextResponse.json(
+        { error: "Payment verification failed. Order not placed." },
+        { status: 400 }
+      );
+    }
   }
 
   try {
@@ -35,14 +70,17 @@ export async function POST(req: NextRequest) {
     // read from what the browser sent.
     const { items, subtotal } = resolveOrderItems(clientItems);
 
+    // 12–15% prepaid discount — only ever applied for a verified ONLINE
+    // payment, computed server-side per line item (see lib/pricing.ts).
+    const { discount, total } = calculateOrderTotal(items, subtotal, isOnline ? "ONLINE" : "COD");
+
     const order = await saveOrder({
       customer,
       items,
       subtotal,
-      paymentMethod: paymentMethod === "ONLINE" ? "ONLINE" : "COD",
-      // For COD, payment is collected on delivery. For ONLINE, this route
-      // should only be called *after* /api/payments/razorpay/verify has
-      // confirmed the signature — see app/checkout/page.tsx.
+      discount,
+      total,
+      paymentMethod: isOnline ? "ONLINE" : "COD",
       razorpayOrderId,
       razorpayPaymentId,
     });

@@ -25,6 +25,48 @@ export interface ClientOrderItem {
 
 export class PricingError extends Error {}
 
+/**
+ * PREPAID DISCOUNT
+ * --------------------------------------------------------------
+ * Applied only to orders paid online via Razorpay (never COD).
+ * The rate is tiered by weight — 220g jars get 15% off, 500g jars get
+ * 12% off. Computed here, per line item, server-side from the
+ * recomputed items list — for the same reason prices are recomputed
+ * above: paymentMethod (and weight) is client-supplied, so the discount
+ * itself must be derived and applied on the server, never trusted as a
+ * pre-calculated number from the browser.
+ */
+export const PREPAID_DISCOUNT_RATES: Record<string, number> = {
+  "220g": 0.15,
+  "500g": 0.12,
+};
+// Used for any item whose weight isn't 220g/500g (e.g. non-pickle
+// products without weight-based variants).
+export const DEFAULT_PREPAID_DISCOUNT_RATE = 0.12;
+
+export function prepaidDiscountRateForWeight(weight?: string): number {
+  if (weight && weight in PREPAID_DISCOUNT_RATES) return PREPAID_DISCOUNT_RATES[weight];
+  return DEFAULT_PREPAID_DISCOUNT_RATE;
+}
+
+export function calculateOrderTotal(
+  items: OrderItem[],
+  subtotal: number,
+  paymentMethod: "COD" | "ONLINE"
+): { discount: number; total: number } {
+  if (paymentMethod !== "ONLINE") {
+    return { discount: 0, total: subtotal };
+  }
+  // Rounded per line item (not on the aggregate subtotal) so a mixed
+  // 220g + 500g cart applies each jar's correct rate rather than one
+  // blended rate across the whole order.
+  const discount = items.reduce(
+    (sum, item) => sum + Math.round(item.price * item.quantity * prepaidDiscountRateForWeight(item.weight)),
+    0
+  );
+  return { discount, total: subtotal - discount };
+}
+
 export function resolveOrderItems(clientItems: ClientOrderItem[]): {
   items: OrderItem[];
   subtotal: number;
@@ -48,6 +90,7 @@ export function resolveOrderItems(clientItems: ClientOrderItem[]): {
     }
 
     let price = product.price;
+    let weight = product.weight;
     if (product.variants && product.variants.length > 0) {
       const variant = ci.weight
         ? product.variants.find((v) => v.weight === ci.weight)
@@ -56,6 +99,7 @@ export function resolveOrderItems(clientItems: ClientOrderItem[]): {
         throw new PricingError(`Unknown variant "${ci.weight}" for "${product.name}".`);
       }
       price = variant.price;
+      weight = variant.weight;
     }
 
     return {
@@ -63,6 +107,7 @@ export function resolveOrderItems(clientItems: ClientOrderItem[]): {
       name: product.name,
       price,
       quantity,
+      weight,
     };
   });
 
