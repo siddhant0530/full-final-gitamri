@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Playfair_Display, Manrope } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
+import PromoBanner from "@/components/PromoBanner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -79,8 +80,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <JsonLd data={organizationJsonLd} />
         <CartProvider>
+          <PromoBanner />
           <Navbar />
-          <div className="pt-[88px]">{children}</div>
+          {/* +48px to account for PromoBanner's (now two-line) height on top of the navbar */}
+          <div className="pt-[136px]">{children}</div>
           <Footer />
           <WhatsAppButton />
 

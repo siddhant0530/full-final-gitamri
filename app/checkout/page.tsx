@@ -270,12 +270,16 @@ export default function CheckoutPage() {
                 checked={paymentMethod === "ONLINE"}
                 onChange={() => setPaymentMethod("ONLINE")}
               />
-              Pay Online (Card / UPI / Netbanking) — Get up to 15% off
+              Pay Online (Card / UPI / Netbanking) —{" "}
+              <span className="font-semibold text-red-600">Get up to 15% off</span>
             </label>
           </div>
+          {paymentMethod === "COD" && (
+            <p className="text-sm text-zinc-500">Free shipping on this order.</p>
+          )}
           {paymentMethod === "ONLINE" && (
             <p className="text-sm text-zinc-500">
-              You&apos;ll be prompted to complete payment via Razorpay (UPI, card, netbanking, or wallet) before your order is placed. A prepaid discount (15% on 220g jars, 12% on 500g jars) is applied automatically.
+              You&apos;ll be prompted to complete payment via Razorpay (UPI, card, netbanking, or wallet) before your order is placed. A prepaid discount (15% on 220g jars, 12% on 500g jars) is applied automatically. Free shipping on this order.
             </p>
           )}
 
