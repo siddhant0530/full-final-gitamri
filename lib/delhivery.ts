@@ -17,6 +17,29 @@ const BASE_URL = process.env.DELHIVERY_BASE_URL || "https://track.delhivery.com"
 const API_TOKEN = process.env.DELHIVERY_API_TOKEN;
 const PICKUP_LOCATION = process.env.DELHIVERY_PICKUP_LOCATION;
 
+/**
+ * SHIPMENT BOX DIMENSIONS
+ * --------------------------------------------------------------
+ * Real, measured glass-jar dimensions (L x W x H, cm), provided directly
+ * by Siddhant. Delhivery's Create Shipment API takes exactly one set of
+ * dimensions per shipment (not per item), so for orders mixing 220g and
+ * 500g jars, the larger (500g) box dimensions are used as a conservative
+ * approximation. Revisit if mixed-size orders need more precise handling.
+ */
+const JAR_DIMENSIONS_CM: Record<string, { length: number; width: number; height: number }> = {
+  "220g": { length: 7.5, width: 7.5, height: 9 },
+  "500g": { length: 8.5, width: 8.5, height: 11 },
+};
+const DEFAULT_JAR_DIMENSIONS = JAR_DIMENSIONS_CM["220g"];
+
+function shipmentDimensionsForItems(items: { weight?: string }[]) {
+  const hasAny500g = items.some((i) => i.weight === "500g");
+  if (hasAny500g) return JAR_DIMENSIONS_CM["500g"];
+  const hasAny220g = items.some((i) => i.weight === "220g");
+  if (hasAny220g) return JAR_DIMENSIONS_CM["220g"];
+  return DEFAULT_JAR_DIMENSIONS;
+}
+
 interface ShipmentInput {
   orderId: string; // your tracking ID, used as Delhivery's order reference
   name: string;
@@ -26,7 +49,7 @@ interface ShipmentInput {
   phone: string;
   paymentMode: "COD" | "Prepaid";
   amount: number; // amount to collect if COD, else 0
-  items: { name: string; quantity: number }[];
+  items: { name: string; quantity: number; weight?: string }[];
 }
 
 export interface ShipmentResult {
@@ -51,6 +74,7 @@ export async function createDelhiveryShipment(input: ShipmentInput): Promise<Shi
     .join(", ")
     .slice(0, 500); // Delhivery caps this field's length
   const totalQuantity = input.items.reduce((sum, i) => sum + i.quantity, 0);
+  const dims = shipmentDimensionsForItems(input.items);
 
   const payload = {
     shipments: [
@@ -67,6 +91,13 @@ export async function createDelhiveryShipment(input: ShipmentInput): Promise<Shi
         products_desc: productsDesc,
         cod_amount_currency: "INR",
         quantity: totalQuantity,
+        // Box dimensions in cm — see JAR_DIMENSIONS_CM above. Field names
+        // follow Delhivery's standard Create Shipment schema; if your
+        // account rejects these, check the response `rmk`/`remarks` and
+        // your Delhivery onboarding docs for the exact field names used.
+        shipment_length: dims.length,
+        shipment_width: dims.width,
+        shipment_height: dims.height,
       },
     ],
     pickup_location: { name: PICKUP_LOCATION },

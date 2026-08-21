@@ -26,10 +26,10 @@ export interface OrderItem {
   price: number;
   quantity: number;
   /**
-   * Only used transiently to compute the weight-tiered prepaid discount
-   * at order-creation time (see lib/pricing.ts) — not persisted to the
-   * OrderItem table, so it will be undefined on items read back from
-   * the database.
+   * Jar size ("220g" / "500g"). Used to compute the weight-tiered prepaid
+   * discount at checkout, and later to pick the right shipment box
+   * dimensions when creating the Delhivery shipment — see lib/delhivery.ts.
+   * Persisted to the OrderItem table's "weight" column.
    */
   weight?: string;
 }
@@ -100,6 +100,9 @@ interface OrderItemRow {
   productId: string;
   quantity: number;
   price: number;
+  // Nullable so this keeps working against older rows saved before this
+  // column existed (weight will just be undefined on those items).
+  weight: string | null;
 }
 
 function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
@@ -123,6 +126,7 @@ function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
         name: productName(i.productId),
         price: i.price,
         quantity: i.quantity,
+        weight: i.weight ?? undefined,
       })),
     // row.total stores the actual amount charged (post-discount); the
     // pre-discount subtotal is derived by adding the discount back.
@@ -227,6 +231,7 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
       productId: item.productId,
       quantity: item.quantity,
       price: item.price,
+      weight: item.weight ?? null,
     }))
   );
 

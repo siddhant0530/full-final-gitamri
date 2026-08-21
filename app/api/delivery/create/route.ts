@@ -25,6 +25,10 @@ export async function POST(req: NextRequest) {
     // pre-discount subtotal, so Delhivery's declared/collectable value
     // matches what the customer actually owes or already paid.
     amount: order.total,
+    // Real product names + quantities for the label's product description
+    // — without this, lib/delhivery.ts falls back to nothing since this
+    // field is required there.
+    items: order.items.map((item) => ({ name: item.name, quantity: item.quantity, weight: item.weight })),
   });
 
   if (!result.success) {
