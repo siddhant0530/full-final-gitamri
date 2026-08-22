@@ -35,18 +35,19 @@ export class PricingError extends Error {}
  * above: paymentMethod (and weight) is client-supplied, so the discount
  * itself must be derived and applied on the server, never trusted as a
  * pre-calculated number from the browser.
+ *
+ * Any item whose weight isn't exactly "220g" or "500g" (e.g. the Pickle
+ * Trial Pack's "6x75g") gets NO discount — it's already discounted off
+ * MRP as a bundle, so the prepaid discount doesn't stack on top of it.
  */
 export const PREPAID_DISCOUNT_RATES: Record<string, number> = {
   "220g": 0.15,
   "500g": 0.12,
 };
-// Used for any item whose weight isn't 220g/500g (e.g. non-pickle
-// products without weight-based variants).
-export const DEFAULT_PREPAID_DISCOUNT_RATE = 0.12;
 
 export function prepaidDiscountRateForWeight(weight?: string): number {
   if (weight && weight in PREPAID_DISCOUNT_RATES) return PREPAID_DISCOUNT_RATES[weight];
-  return DEFAULT_PREPAID_DISCOUNT_RATE;
+  return 0;
 }
 
 export function calculateOrderTotal(

@@ -15,6 +15,28 @@ import { Product } from "@/types/product";
  */
 const allProducts: Product[] = [
 {
+id:"pickle-trial-pack",
+slug:"pickle-trial-pack",
+name:"Pickle Trial Pack",
+category:"Pickles & Chutneys",
+description:"A 6-jar assortment box (75g each) featuring Amla Murabba, Mango Pickle, Mustard Chutney, Green Chilli Pickle, Red Chilli Pickle, and Grated Mango Chutney — a taste of Maaji's full range in one box.",
+shortDescription:"6 mini jars, 6 flavors — the perfect way to try Maaji's pickles.",
+image:"/Trial Pack/4.png",
+gallery:["/Trial Pack/4.png","/Trial Pack/1.png","/Trial Pack/3.png","/Trial Pack/2.png"],
+price:399,
+weight:"6x75g",
+variants:[{weight:"6x75g",price:399,mrp:649}],
+featured:false,
+inStock:true,
+newlyAdded:true,
+ingredients:["Raw Mango","Amla","Green Chilli","Red Chilli","Mustard Seeds","Turmeric Powder","Mustard Oil","Salt (Swad Anusaar)"],
+nutrition:{},
+shelfLife:"12 Months",
+storage:"Store in a cool, dry place.",
+whatsappMessage:"Hi, I'm interested in the Pickle Trial Pack.",
+knowYourPickle:"Can't decide which pickle to start with? The Trial Pack settles it — six 75g jars covering Maaji's most-loved flavors: Amla Murabba, Mango Pickle, Mustard Chutney, Green Chilli Pickle, Red Chilli Pickle, and Grated Mango Chutney, all packed in one gift-ready box.\\n\\nEach mini jar is made exactly the way our full-size jars are — sun-dried, hand-cut, tempered in cold-pressed mustard oil, no vinegar or artificial preservatives. It's a real taste of the range, not a sample-sized compromise.\\n\\nOrder the Trial Pack first, find your favorite, then come back for the full 220g or 500g jar.",
+},
+{
 id:"mango-pickle",
 slug:"mango-pickle",
 name:"Mango Pickle",
