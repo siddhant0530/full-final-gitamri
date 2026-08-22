@@ -53,3 +53,20 @@ h1, h2, h3 {
 .range-thumb::-moz-range-track {
   background: transparent;
 }
+
+/* Continuous left-scrolling ticker for PromoBanner.tsx. The banner
+   renders 4 copies of the offer text back-to-back and this animation
+   shifts the whole row left by exactly 1/4 of its width (one copy's
+   width) before looping — so it appears as an endless, seamless scroll
+   rather than a jump-cut. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-25%);
+  }
+}
+.animate-marquee {
+  animation: marquee 18s linear infinite;
+}

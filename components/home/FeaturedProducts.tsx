@@ -7,7 +7,7 @@ export default function FeaturedProducts() {
   // previously this section used its own separate, hardcoded 4-item list
   // that had no connection to the real catalog, so it ignored stock status
   // entirely and never showed more than 4 products.
-  const FEATURED_HOMEPAGE_IDS = ["mango-pickle", "red-chilli-pickle", "grated-mango-pickle"];
+  const FEATURED_HOMEPAGE_IDS = ["mango-pickle", "red-chilli-pickle", "grated-mango-pickle", "pickle-trial-pack"];
 
 const availableProducts = FEATURED_HOMEPAGE_IDS
   .map((id) => products.find((p) => p.id === id))
