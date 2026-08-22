@@ -43,7 +43,7 @@ export default function FeaturedCategories() {
                   </span>
                 )}
 
-                <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-100 to-orange-100 text-5xl transition-transform duration-500 group-hover:scale-110">
+                <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-100 to-gold-200 text-5xl transition-transform duration-500 group-hover:scale-110">
                   {category.icon}
                 </div>
 

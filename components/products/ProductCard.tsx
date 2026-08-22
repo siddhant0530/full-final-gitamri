@@ -138,7 +138,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-baseline gap-2">
-            <span className="bg-gradient-to-r from-gold-700 to-orange-600 bg-clip-text text-lg font-extrabold text-transparent">
+            <span className="bg-gradient-to-r from-gold-700 to-terracotta-600 bg-clip-text text-lg font-extrabold text-transparent">
               {formatPrice(displayPrice)}
             </span>
             {displayMrp && displayMrp > displayPrice && (

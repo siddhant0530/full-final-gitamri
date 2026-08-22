@@ -25,7 +25,7 @@ export default function ExportSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-sage via-white to-sage py-16 md:py-20">
       <div className="absolute -left-24 top-0 h-80 w-80 rounded-full bg-gold-200/20 blur-3xl"></div>
-      <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-orange-200/20 blur-3xl"></div>
+      <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-gold-200/20 blur-3xl"></div>
 
       <div className="relative mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-3xl text-center">
@@ -35,7 +35,7 @@ export default function ExportSection() {
 
           <h2 className="mt-8 text-4xl font-extrabold tracking-tight text-zinc-900 md:text-6xl">
             From Indian Kitchens
-            <span className="block bg-gradient-to-r from-gold-600 via-orange-500 to-gold-700 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-gold-600 via-gold-500 to-gold-700 bg-clip-text text-transparent">
               To Global Tables
             </span>
           </h2>
@@ -45,7 +45,7 @@ export default function ExportSection() {
             bringing the taste of India to families around the world.
           </p>
 
-          <div className="mx-auto mt-10 h-1 w-28 rounded-full bg-gradient-to-r from-gold-500 via-orange-500 to-gold-600"></div>
+          <div className="mx-auto mt-10 h-1 w-28 rounded-full bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600"></div>
         </div>
 
         <div className="mt-16 grid gap-8 md:grid-cols-2">
@@ -54,7 +54,7 @@ export default function ExportSection() {
               key={item.title}
               className="group rounded-[30px] border border-gold-100 bg-white/80 p-8 shadow-xl backdrop-blur transition-all duration-500 hover:-translate-y-3 hover:border-gold-300 hover:shadow-2xl"
             >
-              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-100 to-orange-100 text-4xl group-hover:scale-110 transition">
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-100 to-gold-200 text-4xl group-hover:scale-110 transition">
                 {item.icon}
               </div>
 
