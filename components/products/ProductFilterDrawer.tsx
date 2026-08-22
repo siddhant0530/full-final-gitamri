@@ -112,7 +112,7 @@ export default function ProductFilterDrawer({
         }`}
       >
         <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-5">
-          <h2 className="font-display text-xl font-bold text-[#123524]">Filters</h2>
+          <h2 className="font-display text-xl font-bold text-[#263526]">Filters</h2>
           <button
             ref={closeButtonRef}
             onClick={onClose}
@@ -137,7 +137,7 @@ export default function ProductFilterDrawer({
                   onChange={() =>
                     setDraft((d) => ({ ...d, availability: toggleSetValue(d.availability, "inStock") }))
                   }
-                  className="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500"
+                  className="h-4 w-4 rounded border-zinc-300 text-gold-600 focus:ring-gold-500"
                 />
                 In Stock
               </label>
@@ -171,7 +171,7 @@ export default function ProductFilterDrawer({
                     name="discount"
                     checked={draft.discount === opt.value}
                     onChange={() => setDraft((d) => ({ ...d, discount: opt.value }))}
-                    className="h-4 w-4 border-zinc-300 text-amber-600 focus:ring-amber-500"
+                    className="h-4 w-4 border-zinc-300 text-gold-600 focus:ring-gold-500"
                   />
                   {opt.label}
                 </label>
@@ -193,7 +193,7 @@ export default function ProductFilterDrawer({
                     onChange={() =>
                       setDraft((d) => ({ ...d, categories: toggleSetValue(d.categories, cat.slug) }))
                     }
-                    className="h-4 w-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500"
+                    className="h-4 w-4 rounded border-zinc-300 text-gold-600 focus:ring-gold-500"
                   />
                   {cat.icon} {cat.name}
                 </label>
@@ -211,7 +211,7 @@ export default function ProductFilterDrawer({
           </button>
           <button
             onClick={handleApply}
-            className="flex-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"
+            className="flex-1 rounded-full bg-terracotta-500 py-3 text-sm font-semibold text-ivory shadow-sm transition hover:bg-terracotta-600 hover:shadow-md"
           >
             Apply Filters
           </button>

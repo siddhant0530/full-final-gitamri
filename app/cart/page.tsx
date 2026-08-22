@@ -18,7 +18,7 @@ export default function CartPage() {
         </p>
         <Link
           href="/products"
-          className="mt-6 inline-block rounded-full bg-amber-500 px-6 py-3 font-semibold text-white hover:bg-amber-600"
+          className="mt-6 inline-block rounded-full bg-olive px-6 py-3 font-semibold text-ivory hover:bg-olive-dark"
         >
           Browse Products
         </Link>
@@ -41,12 +41,12 @@ export default function CartPage() {
               alt={item.name}
               width={96}
               height={96}
-              className="h-24 w-24 rounded-xl object-contain bg-amber-50"
+              className="h-24 w-24 rounded-xl object-contain bg-gold-50"
             />
             <div className="flex-1 text-center sm:text-left">
               <h3 className="text-lg font-semibold text-zinc-900">{item.name}</h3>
               <p className="text-sm text-zinc-500">{item.weight}</p>
-              <p className="mt-1 font-bold text-amber-700">{formatPrice(item.price)}</p>
+              <p className="mt-1 font-bold text-gold-700">{formatPrice(item.price)}</p>
             </div>
 
             <div className="flex items-center rounded-full border border-gray-300">

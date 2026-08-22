@@ -32,6 +32,19 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
+  images: {
+    // Review photos are uploaded to Supabase Storage and rendered via
+    // next/image (see components/home/Testimonials.tsx) — next/image
+    // requires every external image host to be explicitly allow-listed
+    // for security, or it throws at render time ("Invalid src prop").
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "eqvkruvxmxccoacoxsob.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

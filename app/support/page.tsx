@@ -16,12 +16,12 @@ export default function Support() {
       </p>
       <ul className="mt-6 space-y-2 text-zinc-700">
         <li>
-          Email: <a className="text-amber-700 underline" href={`mailto:${company.supportEmail}`}>{company.supportEmail}</a>
+          Email: <a className="text-gold-700 underline" href={`mailto:${company.supportEmail}`}>{company.supportEmail}</a>
         </li>
         <li>
           WhatsApp:{" "}
           <a
-            className="text-amber-700 underline"
+            className="text-gold-700 underline"
             href={`https://wa.me/${company.whatsappNumber}`}
             target="_blank"
             rel="noopener noreferrer"

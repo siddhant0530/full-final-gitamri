@@ -37,14 +37,14 @@ const promises = [
 
 export default function WhyChooseUs() {
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-b from-[#FFF8EA] via-[#F7F8F2] to-white">
+    <section className="py-16 md:py-20 bg-gradient-to-b from-ivory via-ivory to-white">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto">
-          <span className="text-amber-600 font-semibold tracking-[4px] uppercase">
+          <span className="text-gold-600 font-semibold tracking-[4px] uppercase">
             The Maaji Promise
           </span>
 
-          <h2 className="mt-4 text-5xl font-black text-[#123524]">
+          <h2 className="mt-4 text-5xl font-black text-[#263526]">
             Crafted With Tradition.<br />Made With Care.
           </h2>
 
@@ -59,11 +59,11 @@ export default function WhyChooseUs() {
             const Icon = item.icon;
             return (
               <div key={item.title}
-                className="rounded-3xl border border-amber-300 bg-white/80 backdrop-blur-sm p-8 shadow-lg hover:-translate-y-2 hover:shadow-2xl transition">
-                <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
-                  <Icon className="text-amber-600" size={28}/>
+                className="rounded-3xl border border-gold-300 bg-white/80 backdrop-blur-sm p-8 shadow-lg hover:-translate-y-2 hover:shadow-2xl transition">
+                <div className="w-14 h-14 rounded-2xl bg-gold-100 flex items-center justify-center">
+                  <Icon className="text-gold-600" size={28}/>
                 </div>
-                <h3 className="mt-6 text-2xl font-bold text-[#123524]">{item.title}</h3>
+                <h3 className="mt-6 text-2xl font-bold text-[#263526]">{item.title}</h3>
                 <p className="mt-3 text-gray-600 leading-7">{item.text}</p>
               </div>
             );
@@ -71,8 +71,8 @@ export default function WhyChooseUs() {
         </div>
 
         <div className="text-center mt-20">
-          <div className="text-amber-500 text-3xl">★★★★★</div>
-          <h3 className="mt-5 text-3xl font-bold text-[#123524]">
+          <div className="text-gold-500 text-3xl">★★★★★</div>
+          <h3 className="mt-5 text-3xl font-bold text-[#263526]">
             Every Product Carries the Warmth of Home.
           </h3>
           <p className="mt-3 text-lg italic text-gray-700">

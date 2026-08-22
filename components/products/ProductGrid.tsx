@@ -157,8 +157,8 @@ export default function ProductGrid({
           onClick={() => selectPillCategory("all")}
           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
             filters.categories.size === 0
-              ? "bg-amber-500 text-white"
-              : "border border-amber-300 text-zinc-700 hover:bg-amber-50"
+              ? "bg-terracotta-500 text-white"
+              : "border border-gold-300 text-zinc-700 hover:bg-gold-50"
           }`}
         >
           All Products
@@ -173,8 +173,8 @@ export default function ProductGrid({
               onClick={() => selectPillCategory(cat.slug)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 active
-                  ? "bg-amber-500 text-white"
-                  : "border border-amber-300 text-zinc-700 hover:bg-amber-50"
+                  ? "bg-terracotta-500 text-white"
+                  : "border border-gold-300 text-zinc-700 hover:bg-gold-50"
               }`}
             >
               {cat.icon} {cat.name}
@@ -186,12 +186,12 @@ export default function ProductGrid({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={() => setDrawerOpen(true)}
-          className="flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition hover:border-amber-400 hover:text-amber-700"
+          className="flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition hover:border-gold-400 hover:text-gold-700"
         >
           <SlidersHorizontal size={16} />
           Filter
           {activeFilterCount > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-terracotta-500 text-xs font-bold text-white">
               {activeFilterCount}
             </span>
           )}
@@ -202,7 +202,7 @@ export default function ProductGrid({
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOption)}
-            className="rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 focus:border-amber-400 focus:outline-none"
+            className="rounded-full border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 focus:border-gold-400 focus:outline-none"
           >
             {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
               <option key={key} value={key}>
@@ -233,7 +233,7 @@ export default function ProductGrid({
       />
 
       {sorted.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-amber-300 bg-amber-50/50 p-16 text-center">
+        <div className="rounded-3xl border border-dashed border-gold-300 bg-gold-50/50 p-16 text-center">
           <p className="text-lg font-semibold text-zinc-700">No products match these filters.</p>
           <p className="mt-2 text-zinc-500">Try adjusting or clearing a filter.</p>
         </div>

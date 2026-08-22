@@ -7,14 +7,14 @@ import { company } from "@/data/company";
 
 export default function HeroBanner() {
   return (
-    <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-gradient-to-br from-[#0B2C20] via-[#123524] to-[#4A2E12] text-white">
+    <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-gradient-to-br from-[#16211A] via-[#263526] to-[#2A2119] text-white">
       {/* Decorative glow orbs, contained by overflow-hidden on the section */}
-      <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-amber-400/20 blur-3xl" />
+      <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-gold-400/20 blur-3xl" />
       <div className="absolute -right-24 bottom-0 h-[28rem] w-[28rem] rounded-full bg-emerald-400/10 blur-3xl" />
 
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-20 md:px-12 lg:grid-cols-2 lg:py-0">
         <div className="animate-fade-in-up">
-          <span className="inline-block rounded-full border border-amber-400/40 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-amber-200 backdrop-blur">
+          <span className="inline-block rounded-full border border-gold-400/40 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-gold-200 backdrop-blur">
             Gitamri Premium Foods
           </span>
 
@@ -22,12 +22,12 @@ export default function HeroBanner() {
             Gitamri Maaji
           </h1>
 
-          <p className="mt-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">
-            <Star size={16} className="fill-amber-300 text-amber-300" />
+          <p className="mt-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-gold-300">
+            <Star size={16} className="fill-gold-300 text-gold-300" />
             Trusted by Families Across India
           </p>
 
-          <p className="mt-4 text-xl text-amber-100/90 md:text-2xl">
+          <p className="mt-4 text-xl text-gold-100/90 md:text-2xl">
             Pickles • Spices • Pulses • Dry Fruits • Traditional Foods
           </p>
 
@@ -40,22 +40,22 @@ export default function HeroBanner() {
       <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/products"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-amber-400 bg-white/5 px-7 py-4 font-semibold text-amber-200 backdrop-blur transition hover:bg-amber-400 hover:text-[#123524]"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-gold-400 bg-white/5 px-7 py-4 font-semibold text-gold-200 backdrop-blur transition hover:bg-gold-400 hover:text-[#263526]"
             >
               <ShoppingBag size={20} /> Explore Products
             </Link>
           </div>
 
           <div className="mt-12 grid grid-cols-2 gap-4 text-sm text-white/80 md:grid-cols-4">
-            <div className="flex items-center gap-2"><Star size={22} className="text-amber-300" />No Presevatives</div>
-            <div className="flex items-center gap-2">< Home size={28} className="text-amber-300" />Homemade & Hygienic</div>
-            <div className="flex items-center gap-2"><Leaf size={22} className="text-amber-300" />Fresh Ingredients</div>
-            <div className="flex items-center gap-2"><Truck size={26} className="text-amber-300" />Pan India</div>
+            <div className="flex items-center gap-2"><Star size={22} className="text-gold-300" />No Presevatives</div>
+            <div className="flex items-center gap-2">< Home size={28} className="text-gold-300" />Homemade & Hygienic</div>
+            <div className="flex items-center gap-2"><Leaf size={22} className="text-gold-300" />Fresh Ingredients</div>
+            <div className="flex items-center gap-2"><Truck size={26} className="text-gold-300" />Pan India</div>
           </div>
         </div>
 
       <div className="relative flex justify-center lg:justify-end">
-  <div className="absolute h-72 w-72 rounded-full bg-amber-300/30 blur-3xl" />
+  <div className="absolute h-72 w-72 rounded-full bg-gold-300/30 blur-3xl" />
   <div
     className="animate-float relative w-full max-w-md"
     style={{

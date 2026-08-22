@@ -9,10 +9,10 @@ export default function ComingSoonPage({
 }) {
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center px-6 py-24 text-center">
-      <span className="rounded-full bg-amber-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-700">
+      <span className="rounded-full bg-gold-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-gold-700">
         Coming Soon
       </span>
-      <h1 className="mt-5 text-4xl font-black text-[#123524] md:text-5xl">{title}</h1>
+      <h1 className="mt-5 text-4xl font-black text-[#263526] md:text-5xl">{title}</h1>
       <p className="mx-auto mt-4 max-w-md leading-7 text-zinc-600">{description}</p>
       <a
         href={`https://wa.me/${company.whatsappNumber}?text=${encodeURIComponent(

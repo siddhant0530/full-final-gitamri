@@ -39,8 +39,8 @@ export default function ProductGallery({
             onClick={() => setActive(i)}
             className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition ${
               i === active
-                ? "border-amber-500"
-                : "border-zinc-200 hover:border-amber-300"
+                ? "border-gold-500"
+                : "border-zinc-200 hover:border-gold-300"
             }`}
           >
             {isVideo(img) ? (

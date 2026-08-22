@@ -220,7 +220,7 @@ export default function AdminPage() {
           onClick={() => setTab("orders")}
           className={`px-4 py-2 text-sm font-semibold ${
             tab === "orders"
-              ? "border-b-2 border-[#123524] text-[#123524]"
+              ? "border-b-2 border-[#263526] text-[#263526]"
               : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
@@ -230,7 +230,7 @@ export default function AdminPage() {
           onClick={() => setTab("reviews")}
           className={`px-4 py-2 text-sm font-semibold ${
             tab === "reviews"
-              ? "border-b-2 border-[#123524] text-[#123524]"
+              ? "border-b-2 border-[#263526] text-[#263526]"
               : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
@@ -319,7 +319,7 @@ export default function AdminPage() {
                                 href={order.delhiveryTrackingUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-amber-700 underline"
+                                className="text-gold-700 underline"
                               >
                                 Track shipment
                               </a>
@@ -329,7 +329,7 @@ export default function AdminPage() {
                       ) : (
                         <button
                           onClick={() => createShipment(order.trackingId)}
-                          className="rounded-full bg-[#123524] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c2718]"
+                          className="rounded-full bg-[#263526] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c2718]"
                         >
                           Create Delhivery Shipment
                         </button>
@@ -337,13 +337,13 @@ export default function AdminPage() {
                     </div>
 
                     {order.status === "DELIVERED" && reviewLinks[order.trackingId] && (
-                      <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-amber-50 px-3 py-2">
-                        <span className="truncate text-xs text-amber-800">
+                      <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-gold-50 px-3 py-2">
+                        <span className="truncate text-xs text-gold-800">
                           {reviewLinks[order.trackingId]}
                         </span>
                         <button
                           onClick={() => copyLink(reviewLinks[order.trackingId])}
-                          className="shrink-0 rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-700"
+                          className="shrink-0 rounded-full bg-terracotta-500 px-3 py-1 text-xs font-semibold text-ivory hover:bg-terracotta-600"
                         >
                           Copy review link
                         </button>
@@ -371,7 +371,7 @@ export default function AdminPage() {
                     {review.customerName}{" "}
                     <span className="font-normal text-zinc-500">— {review.productSlug}</span>
                   </p>
-                  <p className="text-amber-500">
+                  <p className="text-gold-500">
                     {"★".repeat(review.rating)}
                     {"☆".repeat(5 - review.rating)}
                   </p>
@@ -381,7 +381,7 @@ export default function AdminPage() {
                     review.status === "APPROVED"
                       ? "bg-green-100 text-green-700"
                       : review.status === "PENDING"
-                      ? "bg-amber-100 text-amber-700"
+                      ? "bg-gold-100 text-gold-700"
                       : "bg-red-100 text-red-700"
                   }`}
                 >
@@ -410,7 +410,7 @@ export default function AdminPage() {
                 {review.status === "APPROVED" && (
                   <button
                     onClick={() => toggleFeatured(review.id, !review.homepageFeatured)}
-                    className="rounded-full border border-amber-400 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50"
+                    className="rounded-full border border-gold-400 px-4 py-2 text-xs font-semibold text-olive hover:bg-gold-50"
                   >
                     {review.homepageFeatured ? "Remove from homepage" : "Feature on homepage"}
                   </button>

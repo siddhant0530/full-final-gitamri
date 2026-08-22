@@ -18,18 +18,18 @@ export default function Testimonials({
   if (featured.length === 0) return null;
 
   return (
-    <section className="bg-gradient-to-br from-[#0B2C20] via-[#123524] to-[#4A2E12] py-16 md:py-20 text-white">
+    <section className="bg-gradient-to-br from-[#16211A] via-[#263526] to-[#2A2119] py-16 md:py-20 text-white">
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="text-center">
-          <span className="inline-block rounded-full border border-amber-400/40 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-amber-200">
+          <span className="inline-block rounded-full border border-gold-400/40 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-gold-200">
             Customer Love
           </span>
           <h2 className="mt-6 font-display text-4xl font-black md:text-5xl">
             What Our Customers Say
           </h2>
           {totalCount > 0 && (
-            <p className="mt-4 flex items-center justify-center gap-2 text-amber-200">
-              <span className="text-amber-400">
+            <p className="mt-4 flex items-center justify-center gap-2 text-gold-200">
+              <span className="text-gold-400">
                 {"★".repeat(Math.round(averageRating))}
                 {"☆".repeat(5 - Math.round(averageRating))}
               </span>
@@ -45,12 +45,12 @@ export default function Testimonials({
           {featured.map((review) => (
             <div
               key={review.id}
-              className="rounded-2xl border border-amber-300/20 bg-white/5 p-6 backdrop-blur"
+              className="rounded-2xl border border-gold-300/20 bg-white/5 p-6 backdrop-blur"
             >
               {review.photo && (
                 <button
                   onClick={() => setLightbox(review.photo!)}
-                  className="relative mb-4 h-16 w-16 overflow-hidden rounded-full border-2 border-amber-300/40 transition hover:scale-105"
+                  className="relative mb-4 h-16 w-16 overflow-hidden rounded-full border-2 border-gold-300/40 transition hover:scale-105"
                 >
                   <Image
                     src={review.photo}
@@ -60,14 +60,14 @@ export default function Testimonials({
                   />
                 </button>
               )}
-              <div className="text-amber-400">
+              <div className="text-gold-400">
                 {"★".repeat(review.rating)}
                 {"☆".repeat(5 - review.rating)}
               </div>
               <p className="mt-3 text-sm leading-6 text-white/80">
                 {review.text}
               </p>
-              <p className="mt-4 text-sm font-semibold text-amber-200">
+              <p className="mt-4 text-sm font-semibold text-gold-200">
                 — {review.customerName}
               </p>
             </div>
@@ -77,7 +77,7 @@ export default function Testimonials({
         <div className="mt-10 text-center">
           <Link
             href="/reviews"
-            className="inline-flex items-center gap-2 rounded-full border border-amber-400/50 px-6 py-3 text-sm font-semibold text-amber-200 transition hover:bg-amber-400 hover:text-[#123524]"
+            className="inline-flex items-center gap-2 rounded-full border border-gold-400/50 px-6 py-3 text-sm font-semibold text-gold-200 transition hover:bg-gold-400 hover:text-[#263526]"
           >
             See All Reviews →
           </Link>

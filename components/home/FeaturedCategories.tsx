@@ -4,12 +4,12 @@ import { products } from "@/data/products";
 
 export default function FeaturedCategories() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-amber-50 via-white to-orange-50 py-16 md:py-20">
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,#f59e0b,transparent_40%)]" />
+    <section className="relative overflow-hidden bg-gradient-to-b from-sage via-white to-sage py-16 md:py-20">
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,#B78F45,transparent_40%)]" />
 
       <div className="relative mx-auto max-w-7xl px-6">
         <div className="mb-16 text-center">
-          <span className="inline-block rounded-full bg-amber-100 px-5 py-2 text-sm font-semibold uppercase tracking-[0.3em] text-amber-700">
+          <span className="inline-block rounded-full bg-gold-100 px-5 py-2 text-sm font-semibold uppercase tracking-[0.3em] text-gold-700">
             Our Collection
           </span>
 
@@ -35,7 +35,7 @@ export default function FeaturedCategories() {
               <div
                 key={category.slug}
                 style={{ animationDelay: `${index * 80}ms` }}
-                className="group relative animate-fade-in-up rounded-3xl border border-amber-100 bg-white/80 p-8 backdrop-blur-md shadow-xl transition-all duration-500 hover:-translate-y-3 hover:border-amber-400 hover:shadow-2xl"
+                className="group relative animate-fade-in-up rounded-3xl border border-gold-100 bg-white/80 p-8 backdrop-blur-md shadow-xl transition-all duration-500 hover:-translate-y-3 hover:border-gold-400 hover:shadow-2xl"
               >
                 {comingSoon && (
                   <span className="absolute right-5 top-5 rounded-full bg-zinc-900/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
@@ -43,7 +43,7 @@ export default function FeaturedCategories() {
                   </span>
                 )}
 
-                <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 text-5xl transition-transform duration-500 group-hover:scale-110">
+                <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-100 to-orange-100 text-5xl transition-transform duration-500 group-hover:scale-110">
                   {category.icon}
                 </div>
 
@@ -60,7 +60,7 @@ export default function FeaturedCategories() {
                 ) : (
                   <Link
                     href={`/category/${category.slug}`}
-                    className="mt-8 inline-block rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                    className="mt-8 inline-block rounded-full bg-terracotta-500 px-6 py-3 text-sm font-semibold text-ivory transition-all duration-300 hover:scale-105 hover:bg-terracotta-600 hover:shadow-lg"
                   >
                     Explore ({count}) →
                   </Link>

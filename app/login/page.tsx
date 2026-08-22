@@ -214,7 +214,7 @@ export default function LoginPage() {
       )}
 
       {message && (
-        <p className="mt-6 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">{message}</p>
+        <p className="mt-6 rounded-lg bg-sage p-4 text-sm text-olive">{message}</p>
       )}
 
       <button

@@ -20,68 +20,68 @@ import { Truck, Sparkles, Tag, Gift } from "lucide-react";
 function OfferRow() {
   return (
     <div className="flex items-center shrink-0">
-      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-amber-50/95 tracking-[0.045em]">
+      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-gold-50/95 tracking-[0.045em]">
         <Truck
           size={14}
           strokeWidth={1.6}
-          className="shrink-0 text-amber-400"
+          className="shrink-0 text-gold-400"
         />
         <span>
           Free Shipping on Orders Above{" "}
-          <span className="font-semibold text-amber-300">₹200</span>
+          <span className="font-semibold text-gold-300">₹200</span>
         </span>
       </span>
 
-      <span className="text-[7px] text-amber-400/45">◆</span>
+      <span className="text-[7px] text-gold-400/45">◆</span>
 
-      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-amber-50/95 tracking-[0.045em]">
+      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-gold-50/95 tracking-[0.045em]">
         <Sparkles
           size={14}
           strokeWidth={1.6}
-          className="shrink-0 text-amber-400"
+          className="shrink-0 text-gold-400"
         />
         <span>
           Pickle Trial Pack at{" "}
-          <span className="font-semibold text-amber-300">₹399</span>
+          <span className="font-semibold text-gold-300">₹399</span>
         </span>
       </span>
 
-      <span className="text-[7px] text-amber-400/45">◆</span>
+      <span className="text-[7px] text-gold-400/45">◆</span>
 
-      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-amber-50/95 tracking-[0.045em]">
+      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-gold-50/95 tracking-[0.045em]">
         <Tag
           size={14}
           strokeWidth={1.6}
-          className="shrink-0 text-amber-400"
+          className="shrink-0 text-gold-400"
         />
         <span>Offers automatically applied at checkout</span>
       </span>
 
-      <span className="text-[7px] text-amber-400/45">◆</span>
+      <span className="text-[7px] text-gold-400/45">◆</span>
 
-      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-amber-50/95 tracking-[0.045em]">
+      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-gold-50/95 tracking-[0.045em]">
         <Gift
           size={14}
           strokeWidth={1.6}
-          className="shrink-0 text-amber-400"
+          className="shrink-0 text-gold-400"
         />
         <span>
           Get Upto{" "}
-          <span className="font-semibold text-amber-300">
+          <span className="font-semibold text-gold-300">
             15% Discount
           </span>{" "}
           On all Prepaid Orders
         </span>
       </span>
 
-      <span className="text-[7px] text-amber-400/45">◆</span>
+      <span className="text-[7px] text-gold-400/45">◆</span>
     </div>
   );
 }
 
 export default function PromoBanner() {
   return (
-    <div className="fixed top-0 inset-x-0 z-[60] overflow-hidden bg-[#123524] border-b border-amber-400/70">
+    <div className="fixed top-0 inset-x-0 z-[60] overflow-hidden bg-[#263526] border-b border-gold-400/70">
       <div className="flex min-h-[34px] sm:min-h-[38px] items-center whitespace-nowrap">
         <div className="flex shrink-0 animate-marquee will-change-transform">
           <OfferRow />

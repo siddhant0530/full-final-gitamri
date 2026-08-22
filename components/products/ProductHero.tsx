@@ -28,7 +28,7 @@ export default function ProductHero({ product, reviews }: { product: Product; re
 </div>
 
         <div className="mt-2 flex items-baseline gap-3">
-          <p className="text-lg font-semibold text-amber-700">
+          <p className="text-lg font-semibold text-gold-700">
             {formatPrice(displayPrice)}{" "}
             <span className="text-sm text-zinc-500">/ {displayWeight}</span>
           </p>
@@ -47,8 +47,8 @@ export default function ProductHero({ product, reviews }: { product: Product; re
                 onClick={() => setActiveVariant(i)}
                 className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
                   i === activeVariant
-                    ? "border-amber-500 bg-amber-500 text-white"
-                    : "border-zinc-200 text-zinc-600 hover:border-amber-300"
+                    ? "border-terracotta-500 bg-terracotta-500 text-white"
+                    : "border-zinc-200 text-zinc-600 hover:border-gold-300"
                 }`}
               >
                 {v.weight}

@@ -4,7 +4,7 @@
 body{
   margin: 0;
   font-family: var(--font-sans), Arial, sans-serif;
-  background:#F6F2EA;
+  background:#F8F5EC;
 }
 
 h1, h2, h3 {
@@ -32,7 +32,7 @@ h1, h2, h3 {
   width: 18px;
   height: 18px;
   border-radius: 9999px;
-  background: #f59e0b;
+  background: #B78F45;
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   cursor: pointer;
@@ -42,7 +42,7 @@ h1, h2, h3 {
   width: 18px;
   height: 18px;
   border-radius: 9999px;
-  background: #f59e0b;
+  background: #B78F45;
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   cursor: pointer;

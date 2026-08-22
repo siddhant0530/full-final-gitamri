@@ -83,17 +83,17 @@ export default async function CategoryPage({
   };
 
   return (
-    <main className="bg-gradient-to-b from-[#FFF8EA] via-white to-[#F5F8F2]">
+    <main className="bg-gradient-to-b from-[#F8F5EC] via-white to-[#E7EDE2]">
       <JsonLd data={breadcrumbJsonLd} />
       <JsonLd data={collectionJsonLd} />
-      <section className="relative overflow-hidden bg-[#123524] py-20 text-white">
-        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-amber-400/20 blur-3xl" />
+      <section className="relative overflow-hidden bg-[#263526] py-20 text-white">
+        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-gold-400/20 blur-3xl" />
         <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl px-6 text-center">
           <Link
             href="/products"
-            className="text-sm text-amber-300 hover:text-amber-200"
+            className="text-sm text-gold-300 hover:text-gold-200"
           >
             ← All Products
           </Link>
@@ -113,7 +113,7 @@ export default async function CategoryPage({
 
       <section className="mx-auto max-w-7xl px-6 py-16">
         {available.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-amber-300 bg-amber-50/50 p-16 text-center">
+          <div className="rounded-3xl border border-dashed border-gold-300 bg-gold-50/50 p-16 text-center">
             <p className="text-xl font-semibold text-zinc-700">
               This category is launching soon.
             </p>
@@ -131,7 +131,7 @@ export default async function CategoryPage({
 
         {upcoming.length > 0 && (
           <div className="mt-16">
-            <h2 className="mb-6 text-2xl font-bold text-[#123524]">
+            <h2 className="mb-6 text-2xl font-bold text-[#263526]">
               Coming Soon in {category.name}
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

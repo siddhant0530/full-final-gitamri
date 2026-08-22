@@ -14,17 +14,17 @@ export default function FAQAccordion({ items }: { items: FAQItem[] }) {
         return (
           <div
             key={item.question}
-            className="overflow-hidden rounded-2xl border border-amber-200 bg-white"
+            className="overflow-hidden rounded-2xl border border-gold-200 bg-white"
           >
             <button
               onClick={() => setOpenIndex(isOpen ? null : i)}
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left font-semibold text-[#123524]"
+              className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left font-semibold text-[#263526]"
             >
               {item.question}
               <ChevronDown
                 size={20}
-                className={`shrink-0 text-amber-600 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                className={`shrink-0 text-gold-600 transition-transform ${isOpen ? "rotate-180" : ""}`}
               />
             </button>
             {isOpen && (

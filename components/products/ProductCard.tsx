@@ -17,7 +17,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   if (product.comingSoon) {
     return (
-      <div className="flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-amber-300 bg-amber-50/40 p-10 text-center">
+      <div className="flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-gold-300 bg-gold-50/40 p-10 text-center">
         <span className="rounded-full bg-zinc-900/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
           Coming Soon
         </span>
@@ -52,7 +52,7 @@ export default function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-300 hover:shadow-xl">
+    <div className="group relative overflow-hidden rounded-2xl border border-gold-100 bg-white shadow-md transition-all duration-300 hover:-translate-y-1.5 hover:border-gold-300 hover:shadow-xl">
       {/*
         The whole card used to be a <div onClick={...router.push}> — that
         works for mouse clicks but is invisible to search engine crawlers,
@@ -63,24 +63,24 @@ export default function ProductCard({ product }: { product: Product }) {
         nested inside <a>.
       */}
       <Link href={`/products/${product.slug}`} className="block">
-      <div className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-white p-4">
+      <div className="relative overflow-hidden bg-gradient-to-br from-gold-50 to-white p-4">
         {product.bestSeller && (
-  <span className="absolute left-4 top-4 z-10 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-saffron px-3 py-1.5 text-xs font-bold text-white shadow">
     🏆 Best Seller
   </span>
 )}
 {product.mostLoved && (
-  <span className="absolute left-4 top-4 z-10 rounded-full bg-gradient-to-r from-pink-500 to-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-saffron px-3 py-1.5 text-xs font-bold text-white shadow">
     ❤️ Most Loved
   </span>
 )}
 {product.newlyAdded && (
-  <span className="absolute left-4 top-4 z-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-saffron px-3 py-1.5 text-xs font-bold text-white shadow">
     ✨ Newly Added
   </span>
 )}
 {product.topRated && (
-  <span className="absolute left-4 top-4 z-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-saffron px-3 py-1.5 text-xs font-bold text-white shadow">
     ⭐ Top Rated
   </span>
 )}
@@ -126,8 +126,8 @@ export default function ProductCard({ product }: { product: Product }) {
                 onClick={() => setActiveVariant(i)}
                 className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                   i === activeVariant
-                    ? "border-amber-500 bg-amber-500 text-white"
-                    : "border-zinc-200 text-zinc-600 hover:border-amber-300"
+                    ? "border-terracotta-500 bg-terracotta-500 text-white"
+                    : "border-zinc-200 text-zinc-600 hover:border-gold-300"
                 }`}
               >
                 {v.weight}
@@ -138,7 +138,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-baseline gap-2">
-            <span className="bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-lg font-extrabold text-transparent">
+            <span className="bg-gradient-to-r from-gold-700 to-orange-600 bg-clip-text text-lg font-extrabold text-transparent">
               {formatPrice(displayPrice)}
             </span>
             {displayMrp && displayMrp > displayPrice && (
@@ -151,7 +151,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <button
             disabled={!product.inStock}
             onClick={handleAddToCart}
-            className="rounded-full bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition duration-200 hover:scale-105 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full bg-olive px-5 py-2 text-sm font-semibold text-ivory shadow-sm transition duration-200 hover:scale-105 hover:bg-olive-dark hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Add to Cart
           </button>

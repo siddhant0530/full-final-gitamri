@@ -16,7 +16,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (n: number) 
           type="button"
           aria-label={`${n} star${n > 1 ? "s" : ""}`}
           onClick={() => onChange(n)}
-          className="text-2xl leading-none text-amber-500 transition hover:scale-110"
+          className="text-2xl leading-none text-gold-500 transition hover:scale-110"
         >
           {n <= value ? "★" : "☆"}
         </button>
@@ -118,9 +118,9 @@ export default function ReviewSubmissionForm({
 
   if (done) {
     return (
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
+      <div className="rounded-2xl border border-gold-200 bg-gold-50 p-8 text-center">
         <p className="text-4xl">🙏</p>
-        <h2 className="mt-3 text-xl font-bold text-[#123524]">Thank you!</h2>
+        <h2 className="mt-3 text-xl font-bold text-[#263526]">Thank you!</h2>
         <p className="mt-2 text-zinc-600">
           Your review has been submitted and will appear on the site once it&apos;s reviewed.
         </p>
@@ -153,7 +153,7 @@ export default function ReviewSubmissionForm({
               className="h-20 w-20 rounded-lg object-cover"
             />
           )}
-          <label className="cursor-pointer rounded-lg border border-dashed border-gray-300 px-4 py-3 text-sm text-zinc-600 hover:border-amber-400">
+          <label className="cursor-pointer rounded-lg border border-dashed border-gray-300 px-4 py-3 text-sm text-zinc-600 hover:border-gold-400">
             {uploadingPhoto ? "Uploading…" : photoUrl ? "Change photo" : "Upload photo"}
             <input
               type="file"
@@ -168,7 +168,7 @@ export default function ReviewSubmissionForm({
 
       {items.map((item) => (
         <div key={item.productId} className="rounded-2xl border border-gray-200 p-5">
-          <p className="font-semibold text-[#123524]">{item.name}</p>
+          <p className="font-semibold text-[#263526]">{item.name}</p>
           <div className="mt-2">
             <StarPicker
               value={drafts[item.productId]?.rating ?? 5}

@@ -14,11 +14,11 @@ const availableProducts = FEATURED_HOMEPAGE_IDS
   .filter((p): p is (typeof products)[number] => Boolean(p));
 
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-b from-[#FFF8EA] via-[#FFFDF7] to-white">
+    <section className="py-16 md:py-20 bg-gradient-to-b from-[#F8F5EC] via-[#F8F5EC] to-white">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-14">
-          <p className="uppercase tracking-[4px] text-amber-700 font-semibold">Premium Collection</p>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#123524] mt-4">Explore Our Signature Products</h2>
+          <p className="uppercase tracking-[4px] text-gold-700 font-semibold">Premium Collection</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-[#263526] mt-4">Explore Our Signature Products</h2>
           <p className="text-gray-600 mt-5 max-w-3xl mx-auto text-lg leading-8">
             Crafted using traditional recipes, premium ingredients and generations of authentic Indian taste.
           </p>
@@ -33,7 +33,7 @@ const availableProducts = FEATURED_HOMEPAGE_IDS
         <div className="mt-14 text-center">
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 rounded-full border-2 border-amber-500 px-8 py-4 font-semibold text-[#123524] hover:bg-amber-500 hover:text-white transition"
+            className="inline-flex items-center gap-2 rounded-full bg-terracotta-500 px-8 py-4 font-semibold text-ivory hover:bg-terracotta-600 transition"
           >
             View All Products
           </Link>

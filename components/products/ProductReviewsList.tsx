@@ -22,7 +22,7 @@ export default function ProductReviewsList({ reviews }: { reviews: Review[] }) {
       {reviews.length > 3 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="mt-4 text-sm font-medium text-amber-600 hover:underline"
+          className="mt-4 text-sm font-medium text-gold-600 hover:underline"
         >
           {showAll ? "Show Less" : `More Reviews (${reviews.length - 3})`}
         </button>

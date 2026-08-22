@@ -7,7 +7,7 @@ export default function ProductRating({ reviews }: { reviews: Review[] }) {
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span className="text-amber-500">
+      <span className="text-gold-500">
         {"★".repeat(Math.round(avg))}
         {"☆".repeat(5 - Math.round(avg))}
       </span>

@@ -17,12 +17,12 @@ const promises = [
 
 export default function AboutPage() {
   return (
-    <main className="bg-gradient-to-b from-[#FFF8EA] via-white to-[#F5F8F2]">
+    <main className="bg-gradient-to-b from-[#F8F5EC] via-white to-[#E7EDE2]">
       <section className="mx-auto max-w-4xl px-6 py-20 text-center">
-        <span className="inline-block rounded-full bg-amber-100 px-5 py-2 text-sm font-semibold uppercase tracking-[0.3em] text-amber-700">
+        <span className="inline-block rounded-full bg-gold-100 px-5 py-2 text-sm font-semibold uppercase tracking-[0.3em] text-gold-700">
           About Gitamri
         </span>
-        <h1 className="mt-6 text-4xl font-black leading-tight text-[#123524] md:text-5xl">
+        <h1 className="mt-6 text-4xl font-black leading-tight text-[#263526] md:text-5xl">
           Bringing Back the Purity We Once Knew
         </h1>
       </section>
@@ -68,8 +68,8 @@ export default function AboutPage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-6 pb-16">
-        <div className="rounded-3xl border border-amber-200 bg-white/80 p-10 shadow-xl backdrop-blur-md">
-          <p className="text-center text-lg font-semibold text-[#123524]">
+        <div className="rounded-3xl border border-gold-200 bg-white/80 p-10 shadow-xl backdrop-blur-md">
+          <p className="text-center text-lg font-semibold text-[#263526]">
             At Gitamri, every product carries a promise:
           </p>
 
@@ -77,7 +77,7 @@ export default function AboutPage() {
             {promises.map((item) => (
               <div
                 key={item.text}
-                className="flex flex-col items-center gap-3 rounded-2xl border border-amber-100 bg-amber-50/50 p-6 text-center transition hover:-translate-y-1 hover:shadow-lg"
+                className="flex flex-col items-center gap-3 rounded-2xl border border-gold-100 bg-gold-50/50 p-6 text-center transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <span className="text-3xl">{item.icon}</span>
                 <span className="text-sm font-semibold leading-6 text-zinc-800">
@@ -97,11 +97,11 @@ export default function AboutPage() {
           food back to every Indian home.
         </p>
 
-        <p className="mt-8 text-2xl font-bold text-[#123524]">
+        <p className="mt-8 text-2xl font-bold text-[#263526]">
           Because a healthier future begins with what we eat today.
         </p>
 
-        <p className="mt-10 text-lg font-semibold uppercase tracking-[0.2em] text-amber-700">
+        <p className="mt-10 text-lg font-semibold uppercase tracking-[0.2em] text-gold-700">
           From Maaji&apos;s HANDS to Your Home.
         </p>
       </section>

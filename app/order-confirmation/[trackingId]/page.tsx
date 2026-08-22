@@ -19,7 +19,7 @@ export default async function OrderConfirmationPage({
         <p className="mt-3 text-zinc-600">
           We couldn&apos;t find an order with tracking ID {trackingId}.
         </p>
-        <Link href="/" className="mt-6 inline-block text-amber-700 underline">
+        <Link href="/" className="mt-6 inline-block text-gold-700 underline">
           Back to home
         </Link>
       </main>
@@ -34,8 +34,8 @@ export default async function OrderConfirmationPage({
         Thank you, {order.customer.name}. Your order has been placed successfully.
       </p>
 
-      <div className="mt-8 inline-block rounded-2xl border border-amber-300 bg-amber-50 px-8 py-5">
-        <p className="text-sm uppercase tracking-widest text-amber-700">Tracking ID</p>
+      <div className="mt-8 inline-block rounded-2xl border border-sage bg-sage px-8 py-5">
+        <p className="text-sm uppercase tracking-widest text-olive">Tracking ID</p>
         <p className="mt-1 text-2xl font-bold text-zinc-900">{order.trackingId}</p>
       </div>
 
@@ -43,7 +43,7 @@ export default async function OrderConfirmationPage({
         A confirmation with this tracking ID will be sent to{" "}
         <span className="font-medium">{order.customer.email || "the email you provided"}</span>.
         If you need help with your order, reach us at{" "}
-        <a href={`mailto:${company.supportEmail}`} className="text-amber-700 underline">
+        <a href={`mailto:${company.supportEmail}`} className="text-gold-700 underline">
           {company.supportEmail}
         </a>{" "}
         or on{" "}
@@ -51,7 +51,7 @@ export default async function OrderConfirmationPage({
           href={`https://wa.me/${company.whatsappNumber}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-amber-700 underline"
+          className="text-gold-700 underline"
         >
           WhatsApp
         </a>
@@ -83,7 +83,7 @@ export default async function OrderConfirmationPage({
               href={order.delhiveryTrackingUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-amber-700 underline"
+              className="text-gold-700 underline"
             >
               {order.delhiveryWaybill}
             </a>
@@ -93,7 +93,7 @@ export default async function OrderConfirmationPage({
 
       <Link
         href="/products"
-        className="mt-10 inline-block rounded-full bg-amber-500 px-8 py-4 font-semibold text-white hover:bg-amber-600"
+        className="mt-10 inline-block rounded-full bg-gold-500 px-8 py-4 font-semibold text-white hover:bg-gold-600"
       >
         Continue Shopping
       </Link>

@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <PolicyLayout title="Privacy Policy" updated="24 July 2026">
       <div>
-        <h2 className="text-xl font-bold text-[#123524]">1. Introduction</h2>
+        <h2 className="text-xl font-bold text-[#263526]">1. Introduction</h2>
         <p className="mt-3 leading-7 text-zinc-700">
           Gitamri Maaji (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) values your privacy. This policy
           explains what information we collect when you use our website or place
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-[#123524]">2. Information We Collect</h2>
+        <h2 className="text-xl font-bold text-[#263526]">2. Information We Collect</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 leading-7 text-zinc-700">
           <li>Name, phone number, email address, and delivery address you provide at checkout</li>
           <li>Order details — items purchased, quantities, and order value</li>
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-[#123524]">3. How We Use Your Information</h2>
+        <h2 className="text-xl font-bold text-[#263526]">3. How We Use Your Information</h2>
         <p className="mt-3 leading-7 text-zinc-700">
           We use your information to process and deliver your order, send order
           and shipping updates, respond to enquiries (including over WhatsApp),
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-[#123524]">4. Sharing With Our Service Providers</h2>
+        <h2 className="text-xl font-bold text-[#263526]">4. Sharing With Our Service Providers</h2>
         <p className="mt-3 leading-7 text-zinc-700">
           To fulfil your order, we share the minimum necessary information with:
         </p>
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-[#123524]">5. Data Retention</h2>
+        <h2 className="text-xl font-bold text-[#263526]">5. Data Retention</h2>
         <p className="mt-3 leading-7 text-zinc-700">
           We retain order information for as long as needed to fulfil your order,
           handle any returns or disputes, and meet our legal and accounting
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-[#123524]">6. Your Rights</h2>
+        <h2 className="text-xl font-bold text-[#263526]">6. Your Rights</h2>
         <p className="mt-3 leading-7 text-zinc-700">
           You may request access to, correction of, or deletion of your personal
           information by contacting us using the details below, subject to our
@@ -82,10 +82,10 @@ export default function PrivacyPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold text-[#123524]">7. Contact Us</h2>
+        <h2 className="text-xl font-bold text-[#263526]">7. Contact Us</h2>
         <p className="mt-3 leading-7 text-zinc-700">
           For any privacy-related questions, reach us at{" "}
-          <a href={`mailto:${company.supportEmail}`} className="font-semibold text-amber-700 hover:underline">
+          <a href={`mailto:${company.supportEmail}`} className="font-semibold text-gold-700 hover:underline">
             {company.supportEmail}
           </a>{" "}
           or on WhatsApp at {company.whatsappDisplay}.

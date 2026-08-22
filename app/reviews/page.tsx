@@ -20,15 +20,15 @@ export default async function ReviewsPage() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-16">
       <div className="text-center">
-        <span className="inline-block rounded-full bg-amber-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-amber-700">
+        <span className="inline-block rounded-full bg-gold-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-gold-700">
           Customer Love
         </span>
-        <h1 className="mt-5 text-4xl font-black text-[#123524] md:text-5xl">
+        <h1 className="mt-5 text-4xl font-black text-[#263526] md:text-5xl">
           Customer Reviews
         </h1>
         {reviews.length > 0 && (
           <p className="mt-4 flex items-center justify-center gap-2 text-zinc-700">
-            <span className="text-amber-500">
+            <span className="text-gold-500">
               {"★".repeat(Math.round(averageRating))}
               {"☆".repeat(5 - Math.round(averageRating))}
             </span>
@@ -47,10 +47,10 @@ export default async function ReviewsPage() {
           {reviews.map((review) => {
             const product = productBySlug.get(review.productSlug);
             return (
-              <div key={review.id} className="rounded-2xl border border-amber-200 bg-white p-6">
+              <div key={review.id} className="rounded-2xl border border-gold-200 bg-white p-6">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[#123524]">{review.customerName}</span>
-                  <span className="text-amber-500 text-sm">
+                  <span className="font-semibold text-[#263526]">{review.customerName}</span>
+                  <span className="text-gold-500 text-sm">
                     {"★".repeat(review.rating)}
                     {"☆".repeat(5 - review.rating)}
                   </span>
@@ -64,7 +64,7 @@ export default async function ReviewsPage() {
                 {product && (
                   <Link
                     href={`/products/${product.slug}`}
-                    className="mt-4 inline-block text-sm font-semibold text-amber-700 hover:underline"
+                    className="mt-4 inline-block text-sm font-semibold text-gold-700 hover:underline"
                   >
                     On {product.name} →
                   </Link>

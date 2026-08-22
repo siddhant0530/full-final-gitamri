@@ -27,7 +27,7 @@ export default function PriceRangeSlider({
       <div className="relative h-6">
         <div className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-zinc-200" />
         <div
-          className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-amber-500"
+          className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-terracotta-500"
           style={{ left: `${pctMin}%`, right: `${100 - pctMax}%` }}
         />
         <input

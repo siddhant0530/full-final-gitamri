@@ -22,7 +22,7 @@ export default function ContactPage() {
           href={`mailto:${company.supportEmail}`}
           className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md"
         >
-          <Mail className="text-amber-600" />
+          <Mail className="text-gold-600" />
           <div>
             <p className="font-semibold">Email Support</p>
             <p className="text-zinc-600">{company.supportEmail}</p>

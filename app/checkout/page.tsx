@@ -111,7 +111,7 @@ export default function CheckoutPage() {
         description: "Order Payment",
         order_id: razorpayOrder.id,
         prefill: { name: form.name, email: form.email, contact: form.phone },
-        theme: { color: "#123524" },
+        theme: { color: "#263526" },
         handler: async (response: RazorpaySuccessResponse) => {
           // Verify the signature server-side before trusting the payment
           const verifyRes = await fetch("/api/payments/razorpay/verify", {
@@ -196,7 +196,7 @@ export default function CheckoutPage() {
     return (
       <main className="mx-auto max-w-3xl px-6 py-20 text-center">
         <h1 className="text-3xl font-bold">Your cart is empty</h1>
-        <Link href="/products" className="mt-6 inline-block text-amber-700 underline">
+        <Link href="/products" className="mt-6 inline-block text-gold-700 underline">
           Browse products
         </Link>
       </main>
@@ -288,7 +288,7 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-full bg-green-700 py-4 font-semibold text-white hover:bg-green-800 disabled:opacity-60"
+            className="w-full rounded-full bg-olive py-4 font-semibold text-ivory hover:bg-olive-dark disabled:opacity-60"
           >
             {submitting
               ? paymentMethod === "ONLINE" ? "Processing Payment..." : "Placing Order..."

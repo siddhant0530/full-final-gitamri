@@ -6,7 +6,7 @@ export default function ProductReviewCard({ review }: { review: Review }) {
     <div className="rounded-lg border border-zinc-200 p-4">
       <div className="flex items-center justify-between">
         <span className="font-medium text-zinc-800">{review.customerName}</span>
-        <span className="text-amber-500 text-sm">
+        <span className="text-gold-500 text-sm">
           {"★".repeat(review.rating)}
           {"☆".repeat(5 - review.rating)}
         </span>
