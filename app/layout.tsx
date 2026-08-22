@@ -82,8 +82,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CartProvider>
           <PromoBanner />
           <Navbar />
-          {/* +36px to account for PromoBanner's height on top of the navbar */}
-          <div className="pt-[124px]">{children}</div>
+          {/* +40px to account for PromoBanner's height on top of the navbar */}
+          <div className="pt-[128px]">{children}</div>
           <Footer />
           <WhatsAppButton />
 

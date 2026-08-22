@@ -1,27 +1,94 @@
-// Slim, always-visible strip above the navbar advertising site-wide
-// offers: the tiered prepaid discount (accurate wording — "up to 15%",
-// since it's actually 15% on 220g jars / 12% on 500g jars, see
-// lib/pricing.ts), free shipping (true for every order today, since no
-// shipping fee is charged anywhere in checkout), and the Trial Pack's
-// fixed ₹399 price (see data/products.ts, id "pickle-trial-pack" — no
-// prepaid discount applies to it, hence calling out its price directly
-// rather than a discount percentage).
-//
-// Scrolls continuously left, like a marquee/news ticker. The content is
-// duplicated back-to-back so the loop appears seamless (as soon as the
-// first copy scrolls fully off-screen, the second copy is right behind
-// it in the same position) — see globals.css for the @keyframes.
-const OFFER_TEXT =
-  "Get Upto 15% Discount On all Prepaid Orders  •  Free Shipping on Orders Above ₹200  •  Pickle Trial Pack at ₹399  •  Offers automatically applied at checkout";
+import { Truck, Sparkles, Tag, Gift } from "lucide-react";
+
+/**
+ * Premium site-wide offer marquee above the navbar.
+ * Keeps continuous motion, but uses slower pacing, refined spacing,
+ * subtle separators, and restrained emphasis for a luxury FMCG feel.
+ *
+ * Offer text mirrors what's actually implemented elsewhere — keep these
+ * in sync if pricing/policy changes:
+ *   - Prepaid discount tiers: lib/pricing.ts (PREPAID_DISCOUNT_RATES)
+ *   - Free shipping: true for every order today (no shipping fee exists
+ *     anywhere in checkout), and every product already exceeds ₹200
+ *   - Trial Pack price: data/products.ts, id "pickle-trial-pack"
+ *
+ * Scroll speed/duration lives in the .animate-marquee keyframe in
+ * app/globals.css, not here — slowed to 34s there to match this
+ * component's calmer, more deliberate pacing.
+ */
+
+function OfferRow() {
+  return (
+    <div className="flex items-center shrink-0">
+      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-amber-50/95 tracking-[0.045em]">
+        <Truck
+          size={14}
+          strokeWidth={1.6}
+          className="shrink-0 text-amber-400"
+        />
+        <span>
+          Free Shipping on Orders Above{" "}
+          <span className="font-semibold text-amber-300">₹200</span>
+        </span>
+      </span>
+
+      <span className="text-[7px] text-amber-400/45">◆</span>
+
+      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-amber-50/95 tracking-[0.045em]">
+        <Sparkles
+          size={14}
+          strokeWidth={1.6}
+          className="shrink-0 text-amber-400"
+        />
+        <span>
+          Pickle Trial Pack at{" "}
+          <span className="font-semibold text-amber-300">₹399</span>
+        </span>
+      </span>
+
+      <span className="text-[7px] text-amber-400/45">◆</span>
+
+      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-amber-50/95 tracking-[0.045em]">
+        <Tag
+          size={14}
+          strokeWidth={1.6}
+          className="shrink-0 text-amber-400"
+        />
+        <span>Offers automatically applied at checkout</span>
+      </span>
+
+      <span className="text-[7px] text-amber-400/45">◆</span>
+
+      <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-amber-50/95 tracking-[0.045em]">
+        <Gift
+          size={14}
+          strokeWidth={1.6}
+          className="shrink-0 text-amber-400"
+        />
+        <span>
+          Get Upto{" "}
+          <span className="font-semibold text-amber-300">
+            15% Discount
+          </span>{" "}
+          On all Prepaid Orders
+        </span>
+      </span>
+
+      <span className="text-[7px] text-amber-400/45">◆</span>
+    </div>
+  );
+}
 
 export default function PromoBanner() {
   return (
-    <div className="fixed top-0 inset-x-0 z-[60] bg-[#123524] border-b-2 border-amber-400 overflow-hidden py-2">
-      <div className="flex whitespace-nowrap animate-marquee">
-        <span className="mx-8 text-amber-400 text-xs sm:text-sm font-bold">{OFFER_TEXT}</span>
-        <span className="mx-8 text-amber-400 text-xs sm:text-sm font-bold">{OFFER_TEXT}</span>
-        <span className="mx-8 text-amber-400 text-xs sm:text-sm font-bold">{OFFER_TEXT}</span>
-        <span className="mx-8 text-amber-400 text-xs sm:text-sm font-bold">{OFFER_TEXT}</span>
+    <div className="fixed top-0 inset-x-0 z-[60] overflow-hidden bg-[#123524] border-b border-amber-400/70">
+      <div className="flex min-h-[34px] sm:min-h-[38px] items-center whitespace-nowrap">
+        <div className="flex shrink-0 animate-marquee will-change-transform">
+          <OfferRow />
+          <OfferRow />
+          <OfferRow />
+          <OfferRow />
+        </div>
       </div>
     </div>
   );

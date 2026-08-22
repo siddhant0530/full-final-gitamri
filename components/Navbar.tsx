@@ -42,7 +42,7 @@ function handleSearch(e: React.FormEvent) {
   ];
 
   return (
-    <header className={`fixed top-9 inset-x-0 z-50 transition-all duration-300 ${
+    <header className={`fixed top-10 inset-x-0 z-50 transition-all duration-300 ${
       scrolled
         ? "bg-[#123524]/85 backdrop-blur-xl border-b border-amber-400 shadow-xl"
         : "bg-[#123524]/60 backdrop-blur-md"
