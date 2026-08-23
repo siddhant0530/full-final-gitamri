@@ -20,14 +20,6 @@ export const reviews: Review[] = [
     homepageFeatured: true,
   },
   {
-    id: "2",
-    productSlug: "grated-mango-pickle",
-    customerName: "Verified Customer",
-    rating: 5,
-    text: "Loved the Mango Chutney — great taste and quality.",
-    homepageFeatured: true,
-  },
-  {
     id: "3",
     productSlug: "red-chilli-pickle",
     customerName: "Rajkumar Panyala",
