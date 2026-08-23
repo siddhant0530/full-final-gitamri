@@ -12,25 +12,26 @@ const config: Config = {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
-        // Gitamri Maaji brand palette (6-color system with saffron accent).
-        // "gold" replaces the old default Tailwind "amber" everywhere it was
-        // used (buttons, borders, hover states, text accents) — same shade
-        // positions (50-900) so every existing amber-XXX usage becomes
-        // gold-XXX with identical lightness relationships, just repainted.
+        // Gitamri Maaji brand palette v2 (kirana-store repositioning,
+        // locked Aug 2026). "gold" replaces the old default Tailwind
+        // "amber" everywhere it was used (buttons, borders, hover states,
+        // text accents) — same shade positions (50-900) so every existing
+        // amber-XXX / gold-XXX usage becomes the new Antique Gold tone with
+        // identical lightness relationships, just repainted.
         gold: {
-          50: "#FDF8F0",
-          100: "#FAF0DC",
-          200: "#F3E0B8",
-          300: "#E9CB8C",
-          400: "#C9A35D", // Champagne Gold — the palette's defined main tone
-          500: "#B78F45",
-          600: "#9C7735",
-          700: "#7D5D29",
-          800: "#5E451F",
-          900: "#453116",
+          50: "#F9F6F0",
+          100: "#F0E8DA",
+          200: "#E0D0B5",
+          300: "#CDB386",
+          400: "#B28A45", // Antique Gold — the palette's defined main tone
+          500: "#9D793D",
+          600: "#866834",
+          700: "#6E562B",
+          800: "#554221",
+          900: "#392C16",
         },
         // Terracotta — food/action/CTA accent (secondary buttons, "Add to
-        // Cart", offer badges).
+        // Cart", offer badges). Unchanged in v2.
         terracotta: {
           50: "#FBEEE9",
           100: "#F5D9CD",
@@ -43,19 +44,23 @@ const config: Config = {
           800: "#4F2617",
           900: "#38190F",
         },
-        // Deep Olive — primary brand color (navbar, footer, headers,
-        // primary buttons). Replaces the old #123524.
+        // Deep Trust Green — primary brand color (navbar, footer, headers,
+        // primary buttons). Replaces Deep Olive #263526.
         olive: {
-          DEFAULT: "#263526",
-          dark: "#16211A", // darker gradient partner, replaces old #0B2C20
+          DEFAULT: "#183F35",
+          dark: "#0E2620", // darker gradient partner, replaces old #16211A
         },
         // Warm Ivory — main site background.
-        ivory: "#F8F5EC",
+        ivory: "#F7F1E5",
         // Pale Sage — secondary/alternating section backgrounds.
         sage: "#E7EDE2",
-        // Dark Cocoa — near-black neutral for text/dark gradient accents.
-        // Replaces the old #4A2E12.
-        cocoa: "#2A2119",
+        // Dark Espresso — near-black warm neutral for text/dark gradient
+        // accents and high-contrast promo blocks. Replaces old Cocoa
+        // #2A2119.
+        cocoa: "#29221D",
+        // Soft Green — secondary tone for alternating section backgrounds,
+        // hover states on primary, and secondary outline buttons.
+        pine: "#245447",
         // Signature Saffron — tiny accents ONLY: badges, tags, festive
         // highlights. Not used for large surfaces or as a general CTA color.
         saffron: "#D88924",

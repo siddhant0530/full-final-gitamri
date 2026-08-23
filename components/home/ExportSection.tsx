@@ -2,7 +2,7 @@ export default function ExportSection() {
   const pillars = [
     {
       icon: "🌍",
-      title: "Export Ready",
+      title: "Export-Ready",
       text: "Prepared with consistent quality to serve customers across India and global markets.",
     },
     {
@@ -36,7 +36,7 @@ export default function ExportSection() {
           <h2 className="mt-8 text-4xl font-extrabold tracking-tight text-zinc-900 md:text-6xl">
             From Indian Kitchens
             <span className="block bg-gradient-to-r from-gold-600 via-gold-500 to-gold-700 bg-clip-text text-transparent">
-              To Global Tables
+              to Global Tables
             </span>
           </h2>
 

@@ -5,7 +5,7 @@ import { products } from "@/data/products";
 export default function FeaturedCategories() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-sage via-white to-sage py-16 md:py-20">
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,#B78F45,transparent_40%)]" />
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,#9D793D,transparent_40%)]" />
 
       <div className="relative mx-auto max-w-7xl px-6">
         <div className="mb-16 text-center">
@@ -19,8 +19,8 @@ export default function FeaturedCategories() {
 
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-zinc-600">
             From pickles to pulses, masalas to dry fruits — every category reflects
-            authentic Indian heritage, premium ingredients, and handcrafted quality
-            that families have trusted for generations.
+            authentic Indian heritage, carefully selected ingredients, and handcrafted quality
+            you can trust in every batch.
           </p>
         </div>
 

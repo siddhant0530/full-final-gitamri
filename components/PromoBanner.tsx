@@ -81,7 +81,7 @@ function OfferRow() {
 
 export default function PromoBanner() {
   return (
-    <div className="fixed top-0 inset-x-0 z-[60] overflow-hidden bg-[#263526] border-b border-gold-400/70">
+    <div className="fixed top-0 inset-x-0 z-[60] overflow-hidden bg-[#183F35] border-b border-gold-400/70">
       <div className="flex min-h-[34px] sm:min-h-[38px] items-center whitespace-nowrap">
         <div className="flex shrink-0 animate-marquee will-change-transform">
           <OfferRow />

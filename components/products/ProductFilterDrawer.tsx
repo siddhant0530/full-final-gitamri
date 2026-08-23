@@ -112,7 +112,7 @@ export default function ProductFilterDrawer({
         }`}
       >
         <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-5">
-          <h2 className="font-display text-xl font-bold text-[#263526]">Filters</h2>
+          <h2 className="font-display text-xl font-bold text-[#183F35]">Filters</h2>
           <button
             ref={closeButtonRef}
             onClick={onClose}

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const promises = [
-  { icon: "🌿", text: "100% Organic Ingredients" },
+  { icon: "🌿", text: "Naturally Grown, Preservative-Free" },
   { icon: "🌾", text: "Carefully Selected Farm Sources" },
   { icon: "❤️", text: "No Compromise on Quality" },
   { icon: "🏡", text: "Traditional Taste, Modern Standards" },
@@ -17,12 +17,12 @@ const promises = [
 
 export default function AboutPage() {
   return (
-    <main className="bg-gradient-to-b from-[#F8F5EC] via-white to-[#E7EDE2]">
+    <main className="bg-gradient-to-b from-[#F7F1E5] via-white to-[#E7EDE2]">
       <section className="mx-auto max-w-4xl px-6 py-20 text-center">
         <span className="inline-block rounded-full bg-gold-100 px-5 py-2 text-sm font-semibold uppercase tracking-[0.3em] text-gold-700">
           About Gitamri
         </span>
-        <h1 className="mt-6 text-4xl font-black leading-tight text-[#263526] md:text-5xl">
+        <h1 className="mt-6 text-4xl font-black leading-tight text-[#183F35] md:text-5xl">
           Bringing Back the Purity We Once Knew
         </h1>
       </section>
@@ -38,7 +38,7 @@ export default function AboutPage() {
           <p>
             Our journey began with one mission:
             <br />
-            To bring back 100% Organic, naturally grown, preservative-free foods
+            To bring back naturally grown, preservative-free foods
             that people can trust with confidence.
           </p>
 
@@ -69,7 +69,7 @@ export default function AboutPage() {
 
       <section className="mx-auto max-w-5xl px-6 pb-16">
         <div className="rounded-3xl border border-gold-200 bg-white/80 p-10 shadow-xl backdrop-blur-md">
-          <p className="text-center text-lg font-semibold text-[#263526]">
+          <p className="text-center text-lg font-semibold text-[#183F35]">
             At Gitamri, every product carries a promise:
           </p>
 
@@ -97,12 +97,12 @@ export default function AboutPage() {
           food back to every Indian home.
         </p>
 
-        <p className="mt-8 text-2xl font-bold text-[#263526]">
+        <p className="mt-8 text-2xl font-bold text-[#183F35]">
           Because a healthier future begins with what we eat today.
         </p>
 
         <p className="mt-10 text-lg font-semibold uppercase tracking-[0.2em] text-gold-700">
-          From Maaji&apos;s HANDS to Your Home.
+          From Maaji&apos;s Hands to Your Home.
         </p>
       </section>
     </main>

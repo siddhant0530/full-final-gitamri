@@ -23,22 +23,24 @@ export async function generateMetadata({
 
   const url = `${SITE_URL}/products/${product.slug}`;
   const imageUrl = `${SITE_URL}${product.image}`;
+  const metaTitle = product.seoTitle || product.name;
+  const metaDescription = product.seoDescription || product.shortDescription || product.description;
 
   return {
-    title: product.name,
-    description: product.shortDescription || product.description,
+    title: metaTitle,
+    description: metaDescription,
     alternates: { canonical: url },
     openGraph: {
       type: "website",
-      title: product.name,
-      description: product.shortDescription || product.description,
+      title: metaTitle,
+      description: metaDescription,
       url,
       images: [{ url: imageUrl, alt: product.name }],
     },
     twitter: {
       card: "summary_large_image",
-      title: product.name,
-      description: product.shortDescription || product.description,
+      title: metaTitle,
+      description: metaDescription,
       images: [imageUrl],
     },
     robots: product.comingSoon ? { index: false, follow: true } : { index: true, follow: true },

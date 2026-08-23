@@ -23,7 +23,7 @@ export default async function ReviewsPage() {
         <span className="inline-block rounded-full bg-gold-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-gold-700">
           Customer Love
         </span>
-        <h1 className="mt-5 text-4xl font-black text-[#263526] md:text-5xl">
+        <h1 className="mt-5 text-4xl font-black text-[#183F35] md:text-5xl">
           Customer Reviews
         </h1>
         {reviews.length > 0 && (
@@ -49,7 +49,7 @@ export default async function ReviewsPage() {
             return (
               <div key={review.id} className="rounded-2xl border border-gold-200 bg-white p-6">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-[#263526]">{review.customerName}</span>
+                  <span className="font-semibold text-[#183F35]">{review.customerName}</span>
                   <span className="text-gold-500 text-sm">
                     {"★".repeat(review.rating)}
                     {"☆".repeat(5 - review.rating)}

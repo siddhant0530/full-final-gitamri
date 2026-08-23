@@ -17,12 +17,27 @@ export default function ProductHero({ product, reviews }: { product: Product; re
   const displayWeight = variant ? variant.weight : product.weight;
   const displayMrp = variant?.mrp;
 
+  // Safe generic fallback — true for any traditionally prepared product
+  // without claiming specifics (mustard oil, no vinegar) that don't apply
+  // to every item (e.g. Amla Murabba is a sugar-syrup preserve).
+  const checklist = product.whyYoullLoveIt ?? [
+    "Traditional recipe",
+    "Carefully selected ingredients",
+    "No artificial preservatives",
+    "Hygienically prepared",
+  ];
+
   return (
    <>
     <section className="grid gap-8 md:grid-cols-2">
       <ProductGallery images={product.gallery} name={product.name} />
       <div>
         <h1 className="font-display text-4xl font-bold">{product.name}</h1>
+        {product.subtitle && (
+          <p className="mt-1 text-sm font-medium uppercase tracking-wide text-gold-700">
+            {product.subtitle}
+          </p>
+        )}
         <div className="mt-2">
   <ProductRating reviews={reviews} />
 </div>
@@ -58,6 +73,21 @@ export default function ProductHero({ product, reviews }: { product: Product; re
         )}
 
         <p className="mt-4 text-zinc-600">{product.description}</p>
+
+        <div className="mt-5 rounded-2xl border border-gold-100 bg-gold-50/40 p-5">
+          <p className="text-sm font-bold uppercase tracking-wide text-[#183F35]">
+            Why You&apos;ll Love It
+          </p>
+          <ul className="mt-3 space-y-1.5 text-sm text-zinc-700">
+            {checklist.map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <span className="mt-0.5 text-terracotta-500">✓</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
         <div className="mt-6">
           <ProductActionBar
             product={product}

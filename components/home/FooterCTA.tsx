@@ -39,7 +39,7 @@ export default function FooterCTA() {
 
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 rounded-full border-2 border-gold-400 bg-white/5 px-7 py-4 font-semibold text-gold-300 backdrop-blur transition hover:bg-gold-400 hover:text-[#263526]"
+            className="inline-flex items-center gap-2 rounded-full border-2 border-gold-400 bg-white/5 px-7 py-4 font-semibold text-gold-300 backdrop-blur transition hover:bg-gold-400 hover:text-[#183F35]"
           >
             <ShoppingBag size={20} /> Explore Products
           </Link>

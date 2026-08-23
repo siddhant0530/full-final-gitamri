@@ -7,7 +7,7 @@ import { company } from "@/data/company";
 
 export default function HeroBanner() {
   return (
-    <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-gradient-to-br from-[#16211A] via-[#263526] to-[#2A2119] text-white">
+    <section className="relative flex min-h-[90vh] items-center overflow-hidden bg-gradient-to-br from-[#0E2620] via-[#183F35] to-[#29221D] text-white">
       {/* Decorative glow orbs, contained by overflow-hidden on the section */}
       <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-gold-400/20 blur-3xl" />
       <div className="absolute -right-24 bottom-0 h-[28rem] w-[28rem] rounded-full bg-emerald-400/10 blur-3xl" />
@@ -22,9 +22,9 @@ export default function HeroBanner() {
             Gitamri Maaji
           </h1>
 
-          <p className="mt-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-gold-300">
+          <p className="mt-3 flex items-center gap-2 text-base font-semibold tracking-wide text-gold-300 md:text-lg">
             <Star size={16} className="fill-gold-300 text-gold-300" />
-            Trusted by Families Across India
+            Once Tasted. Forever Remembered.
           </p>
 
           <p className="mt-4 text-xl text-gold-100/90 md:text-2xl">
@@ -32,25 +32,25 @@ export default function HeroBanner() {
           </p>
 
           <p className="mt-6 max-w-xl text-base leading-8 text-white/75 md:text-lg">
-            From Maaji&apos;s hands to your table — a full range of authentic Indian
-            foods prepared with carefully selected ingredients, traditional
-            recipes and uncompromising quality.
+            From Maaji&apos;s hands to your table — authentic Indian flavours
+            made with carefully selected ingredients, traditional recipes and
+            uncompromising quality.
           </p>
 
       <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/products"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-gold-400 bg-white/5 px-7 py-4 font-semibold text-gold-200 backdrop-blur transition hover:bg-gold-400 hover:text-[#263526]"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-gold-400 bg-white/5 px-7 py-4 font-semibold text-gold-200 backdrop-blur transition hover:bg-gold-400 hover:text-[#183F35]"
             >
               <ShoppingBag size={20} /> Explore Products
             </Link>
           </div>
 
           <div className="mt-12 grid grid-cols-2 gap-4 text-sm text-white/80 md:grid-cols-4">
-            <div className="flex items-center gap-2"><Star size={22} className="text-gold-300" />No Presevatives</div>
+            <div className="flex items-center gap-2"><Star size={22} className="text-gold-300" />No Preservatives</div>
             <div className="flex items-center gap-2">< Home size={28} className="text-gold-300" />Homemade & Hygienic</div>
             <div className="flex items-center gap-2"><Leaf size={22} className="text-gold-300" />Fresh Ingredients</div>
-            <div className="flex items-center gap-2"><Truck size={26} className="text-gold-300" />Pan India</div>
+            <div className="flex items-center gap-2"><Truck size={26} className="text-gold-300" />Pan-India</div>
           </div>
         </div>
 

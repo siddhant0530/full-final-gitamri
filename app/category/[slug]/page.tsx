@@ -83,10 +83,10 @@ export default async function CategoryPage({
   };
 
   return (
-    <main className="bg-gradient-to-b from-[#F8F5EC] via-white to-[#E7EDE2]">
+    <main className="bg-gradient-to-b from-[#F7F1E5] via-white to-[#E7EDE2]">
       <JsonLd data={breadcrumbJsonLd} />
       <JsonLd data={collectionJsonLd} />
-      <section className="relative overflow-hidden bg-[#263526] py-20 text-white">
+      <section className="relative overflow-hidden bg-[#183F35] py-20 text-white">
         <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-gold-400/20 blur-3xl" />
         <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-emerald-400/20 blur-3xl" />
 
@@ -131,7 +131,7 @@ export default async function CategoryPage({
 
         {upcoming.length > 0 && (
           <div className="mt-16">
-            <h2 className="mb-6 text-2xl font-bold text-[#263526]">
+            <h2 className="mb-6 text-2xl font-bold text-[#183F35]">
               Coming Soon in {category.name}
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

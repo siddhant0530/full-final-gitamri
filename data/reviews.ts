@@ -15,7 +15,7 @@ export const reviews: Review[] = [
     productSlug: "green-chilli-pickle",
     customerName: "Nirmala Wankhede",
     rating: 5,
-    text: "Absolutely loved the Green Chilli Pickle —ghargutti taste, just like homemade.",
+    text: "Absolutely loved the Green Chilli Pickle — ghargutti taste, just like homemade.",
     photo: "/nirmala wankhede.png.jpeg",
     homepageFeatured: true,
   },
@@ -32,7 +32,7 @@ export const reviews: Review[] = [
     productSlug: "red-chilli-pickle",
     customerName: "Rajkumar Panyala",
     rating: 5,
-    text: "super yummy Reminds my granmaa's Taste, and great packaging.",
+    text: "Super yummy! Reminds me of my grandma's taste, and great packaging.",
     homepageFeatured: true,
   },
   {
@@ -40,7 +40,7 @@ export const reviews: Review[] = [
     productSlug: "red-chilli-pickle",
     customerName: "Ritesh Deshmukh",
     rating: 5,
-    text: "glass jar reflects care and quality. Excellent flavour and presentation.",
+    text: "The glass jar reflects care and quality. Excellent flavour and presentation.",
     homepageFeatured: true,
   },
 

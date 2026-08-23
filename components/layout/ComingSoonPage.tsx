@@ -12,7 +12,7 @@ export default function ComingSoonPage({
       <span className="rounded-full bg-gold-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-gold-700">
         Coming Soon
       </span>
-      <h1 className="mt-5 text-4xl font-black text-[#263526] md:text-5xl">{title}</h1>
+      <h1 className="mt-5 text-4xl font-black text-[#183F35] md:text-5xl">{title}</h1>
       <p className="mx-auto mt-4 max-w-md leading-7 text-zinc-600">{description}</p>
       <a
         href={`https://wa.me/${company.whatsappNumber}?text=${encodeURIComponent(

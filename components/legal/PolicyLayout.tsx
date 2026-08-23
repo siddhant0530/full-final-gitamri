@@ -10,12 +10,12 @@ export default function PolicyLayout({
   children: ReactNode;
 }) {
   return (
-    <main className="bg-gradient-to-b from-[#F8F5EC] via-white to-[#E7EDE2]">
+    <main className="bg-gradient-to-b from-[#F7F1E5] via-white to-[#E7EDE2]">
       <section className="mx-auto max-w-4xl px-6 py-16 text-center">
         <span className="inline-block rounded-full bg-gold-100 px-5 py-2 text-sm font-semibold uppercase tracking-[0.3em] text-gold-700">
           Gitamri Maaji
         </span>
-        <h1 className="mt-6 text-4xl font-black leading-tight text-[#263526] md:text-5xl">
+        <h1 className="mt-6 text-4xl font-black leading-tight text-[#183F35] md:text-5xl">
           {title}
         </h1>
         <p className="mt-4 text-sm text-zinc-500">Last updated: {updated}</p>

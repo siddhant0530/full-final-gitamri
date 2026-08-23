@@ -111,7 +111,7 @@ export default function CheckoutPage() {
         description: "Order Payment",
         order_id: razorpayOrder.id,
         prefill: { name: form.name, email: form.email, contact: form.phone },
-        theme: { color: "#263526" },
+        theme: { color: "#183F35" },
         handler: async (response: RazorpaySuccessResponse) => {
           // Verify the signature server-side before trusting the payment
           const verifyRes = await fetch("/api/payments/razorpay/verify", {

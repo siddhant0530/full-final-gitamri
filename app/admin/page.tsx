@@ -220,7 +220,7 @@ export default function AdminPage() {
           onClick={() => setTab("orders")}
           className={`px-4 py-2 text-sm font-semibold ${
             tab === "orders"
-              ? "border-b-2 border-[#263526] text-[#263526]"
+              ? "border-b-2 border-[#183F35] text-[#183F35]"
               : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
@@ -230,7 +230,7 @@ export default function AdminPage() {
           onClick={() => setTab("reviews")}
           className={`px-4 py-2 text-sm font-semibold ${
             tab === "reviews"
-              ? "border-b-2 border-[#263526] text-[#263526]"
+              ? "border-b-2 border-[#183F35] text-[#183F35]"
               : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
@@ -329,7 +329,7 @@ export default function AdminPage() {
                       ) : (
                         <button
                           onClick={() => createShipment(order.trackingId)}
-                          className="rounded-full bg-[#263526] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c2718]"
+                          className="rounded-full bg-[#183F35] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0c2718]"
                         >
                           Create Delhivery Shipment
                         </button>

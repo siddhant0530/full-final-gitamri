@@ -61,7 +61,7 @@ export default async function Footer() {
         </div>
       </div>
 
-      <div className="bg-[#16211A] text-white">
+      <div className="bg-[#0E2620] text-white">
         <div className="max-w-7xl mx-auto grid gap-8 px-6 py-14 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <div>
             <h3 className="text-2xl font-bold text-gold-400">Gitamri Maaji</h3>

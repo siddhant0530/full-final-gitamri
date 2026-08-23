@@ -120,7 +120,7 @@ export default function ReviewSubmissionForm({
     return (
       <div className="rounded-2xl border border-gold-200 bg-gold-50 p-8 text-center">
         <p className="text-4xl">🙏</p>
-        <h2 className="mt-3 text-xl font-bold text-[#263526]">Thank you!</h2>
+        <h2 className="mt-3 text-xl font-bold text-[#183F35]">Thank you!</h2>
         <p className="mt-2 text-zinc-600">
           Your review has been submitted and will appear on the site once it&apos;s reviewed.
         </p>
@@ -168,7 +168,7 @@ export default function ReviewSubmissionForm({
 
       {items.map((item) => (
         <div key={item.productId} className="rounded-2xl border border-gray-200 p-5">
-          <p className="font-semibold text-[#263526]">{item.name}</p>
+          <p className="font-semibold text-[#183F35]">{item.name}</p>
           <div className="mt-2">
             <StarPicker
               value={drafts[item.productId]?.rating ?? 5}

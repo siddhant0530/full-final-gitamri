@@ -1,5 +1,6 @@
 import HeroBanner from "@/components/home/HeroBanner";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
+import TrialPackSection from "@/components/home/TrialPackSection";
 import FeaturedCategories from "@/components/home/FeaturedCategories";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
 import ExportSection from "@/components/home/ExportSection";
@@ -16,7 +17,7 @@ export default async function Home() {
       : 0;
 
   return (
-    <main className="min-h-screen overflow-hidden bg-gradient-to-b from-[#F8F5EC] via-white to-[#F8F5EC]">
+    <main className="min-h-screen overflow-hidden bg-gradient-to-b from-[#F7F1E5] via-white to-[#F7F1E5]">
       <section className="relative">
         <HeroBanner />
       </section>
@@ -30,13 +31,14 @@ export default async function Home() {
             Authentic Indian Foods, Crafted with Care
           </h2>
           <p className="mx-auto mt-4 max-w-3xl text-lg text-zinc-600">
-            Crafted with traditional recipes and premium ingredients — from our
+            Crafted with traditional recipes and carefully selected ingredients — from our
             signature pickles to masalas, pulses, dry fruits and more.
           </p>
         </div>
       </section>
 
       <FeaturedProducts />
+      <TrialPackSection />
       <FeaturedCategories />
       <WhyChooseUs />
       <ExportSection />

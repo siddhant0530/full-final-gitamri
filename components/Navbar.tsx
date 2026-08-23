@@ -44,8 +44,8 @@ function handleSearch(e: React.FormEvent) {
   return (
     <header className={`fixed top-10 inset-x-0 z-50 transition-all duration-300 ${
       scrolled
-        ? "bg-[#263526]/85 backdrop-blur-xl border-b border-gold-400 shadow-xl"
-        : "bg-[#263526]/60 backdrop-blur-md"
+        ? "bg-[#183F35]/85 backdrop-blur-xl border-b border-gold-400 shadow-xl"
+        : "bg-[#183F35]/60 backdrop-blur-md"
     }`}>
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
         <Link href="/" className="flex items-center gap-3">
@@ -91,7 +91,7 @@ function handleSearch(e: React.FormEvent) {
 
             {categoriesOpen && (
               <div className="absolute left-1/2 top-full w-[480px] -translate-x-1/2 pt-4">
-                <div className="grid grid-cols-2 gap-1 rounded-2xl border border-gold-400/30 bg-[#263526] p-4 shadow-2xl">
+                <div className="grid grid-cols-2 gap-1 rounded-2xl border border-gold-400/30 bg-[#183F35] p-4 shadow-2xl">
                   {categories.map((cat) => (
                     <Link
                       key={cat.slug}
@@ -128,7 +128,7 @@ function handleSearch(e: React.FormEvent) {
           <Link
             href="/cart"
             aria-label="Cart"
-            className="relative rounded-full border border-gold-400 p-3 text-gold-300 hover:bg-gold-400 hover:text-[#263526] transition"
+            className="relative rounded-full border border-gold-400 p-3 text-gold-300 hover:bg-gold-400 hover:text-[#183F35] transition"
           >
             <ShoppingCart size={18} />
             {totalItems > 0 && (
@@ -141,7 +141,7 @@ function handleSearch(e: React.FormEvent) {
           <Link
             href="/login"
             aria-label="Login or Sign up"
-            className="rounded-full border border-gold-400 p-3 text-gold-300 hover:bg-gold-400 hover:text-[#263526] transition"
+            className="rounded-full border border-gold-400 p-3 text-gold-300 hover:bg-gold-400 hover:text-[#183F35] transition"
           >
             <User size={18} />
           </Link>
@@ -163,7 +163,7 @@ function handleSearch(e: React.FormEvent) {
       </nav>
 
       {open && (
-        <div className="md:hidden bg-[#263526]/95 backdrop-blur-xl border-t border-gold-400">
+        <div className="md:hidden bg-[#183F35]/95 backdrop-blur-xl border-t border-gold-400">
           {links.map((item) => (
             <Link
               key={item.href}

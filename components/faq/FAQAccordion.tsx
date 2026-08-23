@@ -19,7 +19,7 @@ export default function FAQAccordion({ items }: { items: FAQItem[] }) {
             <button
               onClick={() => setOpenIndex(isOpen ? null : i)}
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left font-semibold text-[#263526]"
+              className="flex w-full items-center justify-between gap-4 px-6 py-4 text-left font-semibold text-[#183F35]"
             >
               {item.question}
               <ChevronDown

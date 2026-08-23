@@ -18,7 +18,7 @@ export default function Testimonials({
   if (featured.length === 0) return null;
 
   return (
-    <section className="bg-gradient-to-br from-[#16211A] via-[#263526] to-[#2A2119] py-16 md:py-20 text-white">
+    <section className="bg-gradient-to-br from-[#0E2620] via-[#183F35] to-[#29221D] py-16 md:py-20 text-white">
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <div className="text-center">
           <span className="inline-block rounded-full border border-gold-400/40 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-gold-200">
@@ -77,7 +77,7 @@ export default function Testimonials({
         <div className="mt-10 text-center">
           <Link
             href="/reviews"
-            className="inline-flex items-center gap-2 rounded-full border border-gold-400/50 px-6 py-3 text-sm font-semibold text-gold-200 transition hover:bg-gold-400 hover:text-[#263526]"
+            className="inline-flex items-center gap-2 rounded-full border border-gold-400/50 px-6 py-3 text-sm font-semibold text-gold-200 transition hover:bg-gold-400 hover:text-[#183F35]"
           >
             See All Reviews →
           </Link>

@@ -76,12 +76,17 @@ export default function ProductCard({ product }: { product: Product }) {
 )}
 {product.newlyAdded && (
   <span className="absolute left-4 top-4 z-10 rounded-full bg-saffron px-3 py-1.5 text-xs font-bold text-white shadow">
-    ✨ Newly Added
+    ✨ New
   </span>
 )}
 {product.topRated && (
   <span className="absolute left-4 top-4 z-10 rounded-full bg-saffron px-3 py-1.5 text-xs font-bold text-white shadow">
     ⭐ Top Rated
+  </span>
+)}
+{product.customBadge && (
+  <span className="absolute left-4 top-4 z-10 rounded-full bg-saffron px-3 py-1.5 text-xs font-bold text-white shadow">
+    🎁 {product.customBadge}
   </span>
 )}
         <div
