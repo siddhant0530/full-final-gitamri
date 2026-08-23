@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Product } from "@/types/product";
 import { formatPrice } from "@/lib/formatPrice";
+import { prepaidDiscountRateForWeight } from "@/lib/pricing";
 import type { Review } from "@/lib/reviews-store";
 import ProductActionBar from "@/components/products/ProductActionBar";
 import ProductGallery from "@/components/products/ProductGallery";
@@ -16,6 +17,8 @@ export default function ProductHero({ product, reviews }: { product: Product; re
   const displayPrice = variant ? variant.price : product.price;
   const displayWeight = variant ? variant.weight : product.weight;
   const displayMrp = variant?.mrp;
+  const prepaidRate = prepaidDiscountRateForWeight(displayWeight);
+  const prepaidPrice = prepaidRate > 0 ? displayPrice - Math.round(displayPrice * prepaidRate) : null;
 
   // Safe generic fallback — true for any traditionally prepared product
   // without claiming specifics (mustard oil, no vinegar) that don't apply
@@ -53,6 +56,11 @@ export default function ProductHero({ product, reviews }: { product: Product; re
             </span>
           )}
         </div>
+        {prepaidPrice !== null && (
+          <p className="mt-1 text-sm font-semibold text-[#183F35]">
+            Get it for {formatPrice(prepaidPrice)} on prepaid orders ({Math.round(prepaidRate * 100)}% off)
+          </p>
+        )}
 
         {product.variants && product.variants.length > 1 && (
           <div className="mt-4 flex gap-2">

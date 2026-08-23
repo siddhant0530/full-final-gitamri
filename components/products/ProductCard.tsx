@@ -8,6 +8,7 @@ import Image from "next/image";
 import ProductBadge from "./ProductBadge";
 import { Product } from "@/types/product";
 import { formatPrice } from "@/lib/formatPrice";
+import { prepaidDiscountRateForWeight } from "@/lib/pricing";
 import { useCart } from "@/lib/cart-context";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -30,6 +31,9 @@ export default function ProductCard({ product }: { product: Product }) {
   const variant = product.variants?.[activeVariant];
   const displayPrice = variant ? variant.price : product.price;
   const displayMrp = variant?.mrp;
+  const displayWeight = variant ? variant.weight : product.weight;
+  const prepaidRate = prepaidDiscountRateForWeight(displayWeight);
+  const prepaidPrice = prepaidRate > 0 ? displayPrice - Math.round(displayPrice * prepaidRate) : null;
   function handleAddToCart() {
     addToCart(
       product,
@@ -142,14 +146,21 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
 
         <div className="flex items-center justify-between pt-2">
-          <div className="flex items-baseline gap-2">
-            <span className="bg-gradient-to-r from-gold-700 to-terracotta-600 bg-clip-text text-lg font-extrabold text-transparent">
-              {formatPrice(displayPrice)}
-            </span>
-            {displayMrp && displayMrp > displayPrice && (
-              <span className="text-sm text-zinc-400 line-through">
-                {formatPrice(displayMrp)}
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="bg-gradient-to-r from-gold-700 to-terracotta-600 bg-clip-text text-lg font-extrabold text-transparent">
+                {formatPrice(displayPrice)}
               </span>
+              {displayMrp && displayMrp > displayPrice && (
+                <span className="text-sm text-zinc-400 line-through">
+                  {formatPrice(displayMrp)}
+                </span>
+              )}
+            </div>
+            {prepaidPrice !== null && (
+              <p className="mt-0.5 text-xs font-semibold text-[#183F35]">
+                Get it upto {formatPrice(prepaidPrice)}
+              </p>
             )}
           </div>
 
