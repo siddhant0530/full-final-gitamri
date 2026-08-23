@@ -67,6 +67,18 @@ export async function dbUpdate<T>(
   }
   return res.json();
 }
+export async function dbRpc<T>(fn: string, args: Record<string, unknown> = {}): Promise<T> {
+  const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(args),
+  });
+  if (!res.ok) {
+    throw new Error(`Supabase RPC ${fn} failed: ${await res.text()}`);
+  }
+  return res.json();
+}
+
 export async function dbUpsert<T>(
   table: string,
   rows: Record<string, unknown>[],

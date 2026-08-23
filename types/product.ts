@@ -36,6 +36,12 @@ export interface Product {
   // Achar in Mustard Oil, No Vinegar") without cluttering the actual
   // product page, which keeps showing the short, clean `name`/
   // `shortDescription`. Falls back to name/shortDescription if omitted.
+  // GST HSN code, required on a real tax invoice. Deliberately left
+  // unset for every product for now — DO NOT invent, guess, or
+  // placeholder-fill this. The invoice system reads whatever is here
+  // (or blank) at generation time, so entering the correct code per
+  // product later requires no code changes, just filling this in.
+  hsnCode?: string;
   seoTitle?: string;
   seoDescription?: string;
   // Short vernacular/ingredient line shown right under the product name on

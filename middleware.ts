@@ -65,7 +65,8 @@ export async function middleware(req: NextRequest) {
     (pathname === "/api/orders" && req.method === "GET") ||
     (/^\/api\/orders\/[^/]+$/.test(pathname) && req.method === "PATCH") ||
     (pathname === "/api/delivery/create" && req.method === "POST") ||
-    pathname.startsWith("/api/admin/reviews");
+    pathname.startsWith("/api/admin/reviews") ||
+    pathname.startsWith("/api/admin/invoice");
 
   if (isProtectedAdminApi) {
     const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD;

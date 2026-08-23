@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatPrice } from "@/lib/formatPrice";
+import { stateFromPincode } from "@/lib/pincode-state";
 import type { Order, OrderStatus } from "@/lib/order-store";
 import type { Review, ReviewStatus } from "@/lib/reviews-store";
 
@@ -20,7 +21,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState<"checking" | "authed" | "unauthed">("checking");
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [tab, setTab] = useState<"orders" | "reviews">("orders");
+  const [tab, setTab] = useState<"orders" | "reviews" | "analytics">("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewLinks, setReviewLinks] = useState<Record<string, string>>({});
@@ -170,6 +171,78 @@ export default function AdminPage() {
     alert("Review link copied — send it to the customer over WhatsApp or email.");
   }
 
+  // All analytics are derived client-side from the orders already loaded
+  // for the Orders tab — no separate API call needed. Recomputed only
+  // when the orders list actually changes.
+  const analytics = useMemo(() => {
+    const byState = new Map<string, { orders: number; revenue: number }>();
+    const byCity = new Map<string, { orders: number; revenue: number }>();
+    const byProduct = new Map<string, { name: string; quantity: number; revenue: number }>();
+    const byWeight = new Map<string, number>();
+    let codCount = 0;
+    let onlineCount = 0;
+    let totalRevenue = 0;
+
+    for (const order of orders) {
+      totalRevenue += order.total;
+      if (order.paymentMethod === "COD") codCount++;
+      else onlineCount++;
+
+      const state = stateFromPincode(order.customer.pincode);
+      const stateEntry = byState.get(state) ?? { orders: 0, revenue: 0 };
+      stateEntry.orders += 1;
+      stateEntry.revenue += order.total;
+      byState.set(state, stateEntry);
+
+      const city = order.customer.city?.trim() || "Unknown";
+      const cityEntry = byCity.get(city) ?? { orders: 0, revenue: 0 };
+      cityEntry.orders += 1;
+      cityEntry.revenue += order.total;
+      byCity.set(city, cityEntry);
+
+      for (const item of order.items) {
+        const entry = byProduct.get(item.productId) ?? {
+          name: item.name,
+          quantity: 0,
+          revenue: 0,
+        };
+        entry.quantity += item.quantity;
+        entry.revenue += item.price * item.quantity;
+        byProduct.set(item.productId, entry);
+
+        const weightKey = item.weight || "Unspecified";
+        byWeight.set(weightKey, (byWeight.get(weightKey) ?? 0) + item.quantity);
+      }
+    }
+
+    const sortDesc = <T extends { orders?: number; quantity?: number }>(
+      arr: T[],
+      key: keyof T
+    ) => [...arr].sort((a, b) => (Number(b[key]) || 0) - (Number(a[key]) || 0));
+
+    return {
+      totalOrders: orders.length,
+      totalRevenue,
+      codCount,
+      onlineCount,
+      byState: sortDesc(
+        Array.from(byState, ([state, v]) => ({ state, ...v })),
+        "orders"
+      ),
+      byCity: sortDesc(
+        Array.from(byCity, ([city, v]) => ({ city, ...v })),
+        "orders"
+      ),
+      byProduct: sortDesc(
+        Array.from(byProduct.values()),
+        "quantity"
+      ),
+      byWeight: Array.from(byWeight, ([weight, quantity]) => ({ weight, quantity })).sort(
+        (a, b) => b.quantity - a.quantity
+      ),
+    };
+  }, [orders]);
+
   if (status === "checking") {
     return (
       <main className="mx-auto max-w-sm px-6 py-24 text-center text-zinc-500">
@@ -235,6 +308,16 @@ export default function AdminPage() {
           }`}
         >
           Reviews{pendingCount > 0 && ` (${pendingCount} pending)`}
+        </button>
+        <button
+          onClick={() => setTab("analytics")}
+          className={`px-4 py-2 text-sm font-semibold ${
+            tab === "analytics"
+              ? "border-b-2 border-[#183F35] text-[#183F35]"
+              : "text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          Analytics
         </button>
       </div>
 
@@ -336,6 +419,22 @@ export default function AdminPage() {
                       )}
                     </div>
 
+                    <div className="mt-3 border-t border-gray-200 pt-3 flex items-center gap-3">
+                      <a
+                        href={`/api/admin/invoice/${order.trackingId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center rounded-full border border-gold-400 px-4 py-2 text-sm font-semibold text-gold-800 hover:bg-gold-50"
+                      >
+                        Download Invoice
+                      </a>
+                      {order.invoiceNumber && (
+                        <span className="text-xs text-zinc-500">
+                          Invoice: {order.invoiceNumber}
+                        </span>
+                      )}
+                    </div>
+
                     {order.status === "DELIVERED" && reviewLinks[order.trackingId] && (
                       <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-gold-50 px-3 py-2">
                         <span className="truncate text-xs text-gold-800">
@@ -424,6 +523,136 @@ export default function AdminPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {tab === "analytics" && (
+        <div className="space-y-8">
+          {orders.length === 0 ? (
+            <p>No orders yet — analytics will populate once orders start coming in.</p>
+          ) : (
+            <>
+              {/* Summary cards */}
+              <div className="grid gap-4 sm:grid-cols-4">
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Total Orders</p>
+                  <p className="mt-1 text-2xl font-bold text-[#183F35]">{analytics.totalOrders}</p>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Total Revenue</p>
+                  <p className="mt-1 text-2xl font-bold text-[#183F35]">{formatPrice(analytics.totalRevenue)}</p>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Online Prepaid</p>
+                  <p className="mt-1 text-2xl font-bold text-[#183F35]">{analytics.onlineCount}</p>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Cash on Delivery</p>
+                  <p className="mt-1 text-2xl font-bold text-[#183F35]">{analytics.codCount}</p>
+                </div>
+              </div>
+
+              {/* Orders by State */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-[#183F35]">Orders by State</h2>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Estimated from delivery pincode — approximate, not exact (a few pincodes sit on state borders).
+                </p>
+                <div className="mt-4 space-y-3">
+                  {analytics.byState.map((row) => {
+                    const maxOrders = analytics.byState[0]?.orders || 1;
+                    const pct = Math.round((row.orders / maxOrders) * 100);
+                    return (
+                      <div key={row.state}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-zinc-800">{row.state}</span>
+                          <span className="text-zinc-500">
+                            {row.orders} order{row.orders !== 1 ? "s" : ""} · {formatPrice(row.revenue)}
+                          </span>
+                        </div>
+                        <div className="mt-1 h-2 w-full rounded-full bg-gray-100">
+                          <div
+                            className="h-2 rounded-full bg-terracotta-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Orders by City */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-[#183F35]">Orders by City</h2>
+                <p className="mt-1 text-xs text-zinc-500">Exact — taken directly from the delivery address.</p>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-zinc-500">
+                        <th className="py-2">City</th>
+                        <th className="py-2 text-right">Orders</th>
+                        <th className="py-2 text-right">Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics.byCity.map((row) => (
+                        <tr key={row.city} className="border-b border-gray-100">
+                          <td className="py-2 font-medium text-zinc-800">{row.city}</td>
+                          <td className="py-2 text-right">{row.orders}</td>
+                          <td className="py-2 text-right">{formatPrice(row.revenue)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Product-wise sales */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-[#183F35]">Which Pickle Sells the Most</h2>
+                <p className="mt-1 text-xs text-zinc-500">Quantity and revenue summed across all orders, by product.</p>
+                <div className="mt-4 space-y-3">
+                  {analytics.byProduct.map((row) => {
+                    const maxQty = analytics.byProduct[0]?.quantity || 1;
+                    const pct = Math.round((row.quantity / maxQty) * 100);
+                    return (
+                      <div key={row.name}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-zinc-800">{row.name}</span>
+                          <span className="text-zinc-500">
+                            {row.quantity} sold · {formatPrice(row.revenue)}
+                          </span>
+                        </div>
+                        <div className="mt-1 h-2 w-full rounded-full bg-gray-100">
+                          <div
+                            className="h-2 rounded-full bg-[#183F35]"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Weight split (220g vs 500g etc) */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-bold text-[#183F35]">Jar Size Preference</h2>
+                <p className="mt-1 text-xs text-zinc-500">Which weight variants customers pick most often.</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {analytics.byWeight.map((row) => (
+                    <div
+                      key={row.weight}
+                      className="rounded-full border border-gold-300 bg-gold-50 px-4 py-2 text-sm font-semibold text-gold-800"
+                    >
+                      {row.weight}: {row.quantity} sold
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </main>

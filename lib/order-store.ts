@@ -62,6 +62,10 @@ export interface Order {
   razorpayPaymentId?: string;
   delhiveryWaybill?: string;
   delhiveryTrackingUrl?: string;
+  /** Set the first time an invoice PDF is generated for this order, then
+   * reused on every subsequent download so the number never changes. */
+  invoiceNumber?: string;
+  invoiceGeneratedAt?: string;
 }
 
 function productName(productId: string): string {
@@ -92,6 +96,11 @@ interface OrderRow {
   razorpayPaymentId: string | null;
   delhiveryWaybill: string | null;
   delhiveryTrackingUrl: string | null;
+  // Nullable so this keeps working against orders saved before invoicing
+  // existed — they simply won't have an invoice number until one is
+  // generated for them.
+  invoiceNumber: string | null;
+  invoiceGeneratedAt: string | null;
 }
 
 interface OrderItemRow {
@@ -139,6 +148,8 @@ function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
     razorpayPaymentId: row.razorpayPaymentId ?? undefined,
     delhiveryWaybill: row.delhiveryWaybill ?? undefined,
     delhiveryTrackingUrl: row.delhiveryTrackingUrl ?? undefined,
+    invoiceNumber: row.invoiceNumber ?? undefined,
+    invoiceGeneratedAt: row.invoiceGeneratedAt ?? undefined,
   };
 }
 
