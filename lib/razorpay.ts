@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 /**
  * RAZORPAY INTEGRATION
@@ -32,7 +32,21 @@ export interface RazorpayOrder {
 
 // Creates a Razorpay order. Amount must be passed in rupees; this
 // converts to paise (Razorpay's smallest unit) internally.
-export async function createRazorpayOrder(amountInRupees: number, receipt: string) {
+//
+// `notes` (optional) lets the webhook safety net (see
+// app/api/webhooks/razorpay/route.ts) reconstruct and save an order even
+// if the browser never successfully calls POST /api/orders after payment
+// — e.g. the tab closes right after payment, a network hiccup, or
+// Supabase being auto-paused at that exact moment (the real incident that
+// motivated this: a customer paid successfully but no order was ever
+// written). Razorpay caps notes at 15 key-value pairs, 256 characters
+// each — see buildOrderNotes() in the create-order route for the
+// truncation that enforces this.
+export async function createRazorpayOrder(
+  amountInRupees: number,
+  receipt: string,
+  notes?: Record<string, string>
+) {
   const res = await fetch("https://api.razorpay.com/v1/orders", {
     method: "POST",
     headers: {
@@ -43,6 +57,7 @@ export async function createRazorpayOrder(amountInRupees: number, receipt: strin
       amount: Math.round(amountInRupees * 100),
       currency: "INR",
       receipt,
+      ...(notes ? { notes } : {}),
     }),
   });
 
@@ -72,4 +87,28 @@ export function verifyRazorpaySignature({
     .update(`${orderId}|${paymentId}`)
     .digest("hex");
   return expected === signature;
+}
+
+/**
+ * Verifies a Razorpay webhook delivery (see app/api/webhooks/razorpay).
+ * This is a DIFFERENT secret from RAZORPAY_KEY_SECRET above — it's the
+ * one you set when creating the webhook in the Razorpay Dashboard
+ * (Settings → Webhooks), configured here as RAZORPAY_WEBHOOK_SECRET.
+ * Must be computed over the exact raw request body (not a re-serialized
+ * copy), since re-serializing JSON can reorder keys or change whitespace
+ * and silently break the signature match.
+ */
+export function verifyRazorpayWebhookSignature(rawBody: string, signature: string | null): boolean {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!secret || !signature) return false;
+
+  const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
+
+  // Timing-safe comparison — a plain === leaks how many leading
+  // characters matched via response-time differences, which matters for
+  // a signature check like this.
+  const expectedBuf = Buffer.from(expected);
+  const signatureBuf = Buffer.from(signature);
+  if (expectedBuf.length !== signatureBuf.length) return false;
+  return timingSafeEqual(expectedBuf, signatureBuf);
 }

@@ -196,6 +196,28 @@ export async function getOrderByTrackingId(trackingId: string): Promise<Order | 
   return toOrder(orderRows[0], itemRows);
 }
 
+/**
+ * Used for idempotency by the Razorpay webhook safety net (see
+ * app/api/webhooks/razorpay/route.ts) — before self-healing a missing
+ * order for a captured payment, it checks whether the normal checkout
+ * flow already wrote one for this exact razorpayPaymentId, so a payment
+ * never ends up with two order rows.
+ */
+export async function getOrderByRazorpayPaymentId(razorpayPaymentId: string): Promise<Order | undefined> {
+  const orderRows = await dbSelect<OrderRow>(
+    "Order",
+    `select=*&razorpayPaymentId=eq.${encodeURIComponent(razorpayPaymentId)}`
+  );
+  if (orderRows.length === 0) return undefined;
+
+  const itemRows = await dbSelect<OrderItemRow>(
+    "OrderItem",
+    `select=*&orderId=eq.${orderRows[0].id}`
+  );
+
+  return toOrder(orderRows[0], itemRows);
+}
+
 interface SaveOrderInput {
   customer: Order["customer"];
   items: OrderItem[];
@@ -209,11 +231,19 @@ interface SaveOrderInput {
 
 export async function saveOrder(input: SaveOrderInput): Promise<Order> {
   const guestUserId = randomUUID();
+  // Explicitly setting updatedAt here (not just relying on the DB
+  // default added after a real incident where every checkout — COD and
+  // online alike — failed with a NOT NULL constraint violation on this
+  // column, since nothing was ever setting it) means this insert keeps
+  // working even if that DB-level default is ever removed or this code
+  // runs against a differently-configured database later.
+  const now = new Date().toISOString();
   await dbInsert("User", [
     {
       id: guestUserId,
       name: input.customer.name,
       email: input.customer.email || null,
+      updatedAt: now,
     },
   ]);
 

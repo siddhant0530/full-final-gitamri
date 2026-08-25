@@ -225,6 +225,30 @@ const PAGE_HEIGHT = 841.89;
 const MARGIN = 32;
 const RIGHT_EDGE = PAGE_WIDTH - MARGIN;
 
+/**
+ * Makes arbitrary customer-entered text (name, address, city — anything
+ * that isn't our own copy) safe to pass to pdf-lib's standard fonts.
+ *
+ * This exists because a real invoice crashed in production: a customer's
+ * address (pasted from Google Maps/WhatsApp, most likely) contained a
+ * literal newline character. pdf-lib's WinAnsi-encoded standard fonts
+ * can't measure or draw a bare \n, \r, \t, other control characters, or
+ * anything outside the Latin-1 range (emoji, most non-Latin scripts) —
+ * font.widthOfTextAtSize() throws on them, which crashed invoice
+ * generation entirely for that order. Every place in this file that
+ * draws customer-supplied text runs it through this first so a single
+ * unusual character in someone's address can never take down the whole
+ * PDF again.
+ */
+function sanitizeForPdf(str: string): string {
+  return str
+    .replace(/[\r\n\t]+/g, " ") // line/tab breaks -> single space, keeps it one line
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "") // other control chars
+    .replace(/[^\u0000-\u00FF]/g, "?") // outside WinAnsi's practical range (emoji, non-Latin scripts, etc.)
+    .replace(/ {2,}/g, " ")
+    .trim();
+}
+
 export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   const invoiceNumber = await getOrCreateInvoiceNumber(order);
   const invoiceDate = new Date();
@@ -269,6 +293,7 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   ) {
     const size = opts.size ?? 8;
     const f = opts.f ?? font;
+    str = sanitizeForPdf(str);
     let drawX = x;
     if (opts.align === "right" && opts.maxWidth !== undefined) {
       const w = f.widthOfTextAtSize(str, size);
@@ -307,6 +332,7 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
 
   /** Truncates str (adding "…" if cut) so it fits within maxWidth at the given font/size. */
   function truncateToFit(str: string, maxWidth: number, f: PDFFont, size: number): string {
+    str = sanitizeForPdf(str);
     if (f.widthOfTextAtSize(str, size) <= maxWidth) return str;
     let lo = 0;
     let hi = str.length;

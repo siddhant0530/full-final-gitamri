@@ -108,6 +108,11 @@ export default function CheckoutPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         items: items.map((i) => ({ productId: i.productId, weight: i.weight, quantity: i.quantity })),
+        // Stashed into the Razorpay order's notes server-side so the
+        // webhook safety net can self-heal this order if the browser
+        // never successfully reaches POST /api/orders after payment
+        // (closed tab, dropped network, Supabase paused at that moment).
+        customer: form,
       }),
     });
     const createData = await createRes.json();
@@ -211,7 +216,21 @@ export default function CheckoutPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to place order");
+      if (!res.ok) {
+        // Surface the server's actual reason (e.g. "Please fill in all
+        // required fields," a pricing error, a payment-verification
+        // failure) instead of a generic message — a hardcoded string here
+        // was hiding real causes and made failures like this hard to
+        // diagnose from a customer's report alone.
+        let serverMessage = "";
+        try {
+          const errData = await res.json();
+          serverMessage = errData?.error || "";
+        } catch {
+          // response wasn't JSON — fall through to the generic message below
+        }
+        throw new Error(serverMessage || `Failed to place order (status ${res.status}).`);
+      }
 
       const { order } = await res.json();
       clearCart();
