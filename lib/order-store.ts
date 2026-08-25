@@ -49,6 +49,11 @@ export interface Order {
     address: string;
     city: string;
     pincode: string;
+    /** Captured directly at checkout via pincode lookup (see
+     * /api/pincode/[code]), not derived. Optional because orders placed
+     * before this existed won't have it — see lib/pincode-state.ts for
+     * the approximate fallback used on those older orders. */
+    state?: string;
   };
   items: OrderItem[];
   subtotal: number;
@@ -90,6 +95,9 @@ interface OrderRow {
   address: string;
   city: string;
   pincode: string;
+  // Nullable so this keeps working against orders saved before this
+  // column existed — see the "state" field on Order["customer"] above.
+  state: string | null;
   paymentMethod: string;
   paymentStatus: string;
   razorpayOrderId: string | null;
@@ -127,6 +135,7 @@ function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
       address: row.address,
       city: row.city,
       pincode: row.pincode,
+      state: row.state ?? undefined,
     },
     items: itemRows
       .filter((i) => i.orderId === row.id)
@@ -227,6 +236,7 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
       address: input.customer.address,
       city: input.customer.city,
       pincode: input.customer.pincode,
+      state: input.customer.state || null,
       paymentMethod: input.paymentMethod,
       paymentStatus,
       razorpayOrderId: input.razorpayOrderId || null,

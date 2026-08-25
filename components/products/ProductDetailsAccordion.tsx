@@ -79,7 +79,7 @@ export default function ProductDetailsAccordion({ product, selectedWeight }: { p
         {active === "How to Enjoy" && (
           <p className="text-sm leading-relaxed">
             {product.howToEnjoy ??
-              "Best enjoyed with parathas, dal-chawal, curd rice, or as a flavorful side with any Indian meal."}
+              "Best enjoyed with parathas, dal-chawal, curd rice, or as a flavourful side with any Indian meal."}
           </p>
         )}
 

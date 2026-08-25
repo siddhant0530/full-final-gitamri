@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     address: order.customer.address,
     city: order.customer.city,
     pincode: order.customer.pincode,
+    state: order.customer.state,
     phone: order.customer.phone,
     paymentMode: order.paymentMethod === "COD" ? "COD" : "Prepaid",
     // Use the actual amount owed/charged (post prepaid-discount), not the

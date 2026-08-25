@@ -36,11 +36,15 @@ export interface Product {
   // Achar in Mustard Oil, No Vinegar") without cluttering the actual
   // product page, which keeps showing the short, clean `name`/
   // `shortDescription`. Falls back to name/shortDescription if omitted.
-  // GST HSN code, required on a real tax invoice. Deliberately left
-  // unset for every product for now — DO NOT invent, guess, or
-  // placeholder-fill this. The invoice system reads whatever is here
-  // (or blank) at generation time, so entering the correct code per
-  // product later requires no code changes, just filling this in.
+  // GST HSN code, required on a real tax invoice. Set to "2005" (vegetables/
+  // fruit preserved by vinegar/acetic acid — correct for the Pickles &
+  // Chutneys category) across the catalog per owner direction on 26-Aug-26,
+  // with Amla Murabba on "2006" (fruit preserved by sugar). This is ONLY
+  // verified correct for Pickles & Chutneys. The Atta/Sattu/Flours, Pulses,
+  // Masalas & Whole Spices, and Ready-to-Eat categories still carry the
+  // 2005 default from that bulk fill and need their own real chapter codes
+  // (pulses ~0713, atta/flour ~1101-1102, spice powders ~0904-0910/2103,
+  // etc.) confirmed before any of those products go live for sale.
   hsnCode?: string;
   seoTitle?: string;
   seoDescription?: string;

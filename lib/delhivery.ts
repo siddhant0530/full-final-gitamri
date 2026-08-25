@@ -46,6 +46,7 @@ interface ShipmentInput {
   address: string;
   city: string;
   pincode: string;
+  state?: string;
   phone: string;
   paymentMode: "COD" | "Prepaid";
   amount: number; // amount to collect if COD, else 0
@@ -83,6 +84,10 @@ export async function createDelhiveryShipment(input: ShipmentInput): Promise<Shi
         add: input.address,
         city: input.city,
         pin: input.pincode,
+        // Optional on Delhivery's side, but including it when we have it
+        // (captured at checkout via /api/pincode) avoids their address
+        // system falling back to its own pincode-derived guess.
+        state: input.state || undefined,
         phone: input.phone,
         order: input.orderId,
         payment_mode: input.paymentMode,

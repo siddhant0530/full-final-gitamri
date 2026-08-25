@@ -188,7 +188,10 @@ export default function AdminPage() {
       if (order.paymentMethod === "COD") codCount++;
       else onlineCount++;
 
-      const state = stateFromPincode(order.customer.pincode);
+      // Prefer the exact state captured at checkout; only fall back to the
+      // pincode-prefix approximation for orders placed before that field
+      // existed.
+      const state = order.customer.state || stateFromPincode(order.customer.pincode);
       const stateEntry = byState.get(state) ?? { orders: 0, revenue: 0 };
       stateEntry.orders += 1;
       stateEntry.revenue += order.total;
@@ -358,7 +361,8 @@ export default function AdminPage() {
                     <p className="text-sm text-zinc-600">{order.customer.phone}</p>
                     <p className="text-sm text-zinc-600">{order.customer.email}</p>
                     <p className="text-sm text-zinc-600">
-                      {order.customer.address}, {order.customer.city} - {order.customer.pincode}
+                      {order.customer.address}, {order.customer.city}
+                      {order.customer.state ? `, ${order.customer.state}` : ""} - {order.customer.pincode}
                     </p>
                   </div>
                   <div className="text-sm">
@@ -556,7 +560,7 @@ export default function AdminPage() {
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-bold text-[#183F35]">Orders by State</h2>
                 <p className="mt-1 text-xs text-zinc-500">
-                  Estimated from delivery pincode — approximate, not exact (a few pincodes sit on state borders).
+                  Exact for orders placed after the state field was added at checkout; older orders fall back to an estimate from delivery pincode.
                 </p>
                 <div className="mt-4 space-y-3">
                   {analytics.byState.map((row) => {

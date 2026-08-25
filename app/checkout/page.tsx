@@ -62,13 +62,41 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     pincode: "",
+    state: "",
   });
+  const [stateLookup, setStateLookup] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "ONLINE">("COD");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  // Auto-fills State (and City, only if still blank) from a 6-digit
+  // pincode via /api/pincode/[code] — see that route for why this is
+  // proxied server-side rather than called directly from the browser.
+  // State stays editable afterwards in case the lookup is ever wrong
+  // for a border pincode.
+  async function lookupPincode(pincode: string) {
+    if (!/^\d{6}$/.test(pincode)) return;
+    setStateLookup("loading");
+    try {
+      const res = await fetch(`/api/pincode/${pincode}`);
+      const data = await res.json();
+      if (data.state) {
+        setForm((f) => ({
+          ...f,
+          state: data.state,
+          city: f.city.trim() ? f.city : data.city || f.city,
+        }));
+        setStateLookup("done");
+      } else {
+        setStateLookup("error");
+      }
+    } catch {
+      setStateLookup("error");
+    }
   }
 
   async function payWithRazorpay(): Promise<RazorpayPaymentInfo | null> {
@@ -145,8 +173,12 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError("");
 
-    if (!form.name || !form.phone || !form.address || !form.city || !form.pincode) {
+    if (!form.name || !form.phone || !form.address || !form.city || !form.pincode || !form.state) {
       setError("Please fill in all required fields.");
+      return;
+    }
+    if (!/^\d{6}$/.test(form.pincode)) {
+      setError("Please enter a valid 6-digit pincode.");
       return;
     }
     if (items.length === 0) {
@@ -247,9 +279,35 @@ export default function CheckoutPage() {
             <input
               placeholder="Pincode *"
               value={form.pincode}
-              onChange={(e) => update("pincode", e.target.value)}
+              maxLength={6}
+              inputMode="numeric"
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
+                update("pincode", digits);
+                if (digits.length === 6) lookupPincode(digits);
+                else setStateLookup("idle");
+              }}
               className="w-1/2 rounded-lg border border-gray-300 px-4 py-3"
             />
+          </div>
+          <div>
+            <input
+              placeholder="State *"
+              value={form.state}
+              onChange={(e) => update("state", e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3"
+            />
+            {stateLookup === "loading" && (
+              <p className="mt-1 text-xs text-zinc-500">Looking up state from pincode…</p>
+            )}
+            {stateLookup === "error" && (
+              <p className="mt-1 text-xs text-amber-600">
+                Couldn&apos;t auto-detect state from that pincode — please enter it manually.
+              </p>
+            )}
+            {stateLookup === "done" && (
+              <p className="mt-1 text-xs text-green-700">Auto-filled from pincode — edit if incorrect.</p>
+            )}
           </div>
 
           <h2 className="pt-4 text-xl font-semibold">Payment Method</h2>

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     razorpaySignature,
   } = body;
 
-  if (!customer?.name || !customer?.phone || !customer?.address || !clientItems?.length) {
+  if (!customer?.name || !customer?.phone || !customer?.address || !customer?.state || !clientItems?.length) {
     return NextResponse.json(
       { error: "Missing required order details." },
       { status: 400 }
