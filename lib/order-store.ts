@@ -229,23 +229,48 @@ interface SaveOrderInput {
   razorpayPaymentId?: string;
 }
 
-export async function saveOrder(input: SaveOrderInput): Promise<Order> {
-  const guestUserId = randomUUID();
-  // Explicitly setting updatedAt here (not just relying on the DB
-  // default added after a real incident where every checkout — COD and
-  // online alike — failed with a NOT NULL constraint violation on this
-  // column, since nothing was ever setting it) means this insert keeps
-  // working even if that DB-level default is ever removed or this code
-  // runs against a differently-configured database later.
+/**
+ * Finds the existing guest "User" row for this email (if any) and reuses
+ * it, or creates a new one. Without this, saveOrder() would try to INSERT
+ * a brand-new User row on every single order — which works exactly once
+ * per email, then fails with a 409 conflict the next time that same
+ * customer orders again, because User.email has a unique index. (This
+ * exact fix — findOrCreateUser() — existed in an earlier build but was
+ * lost in a git-restore during a later session; this restores it.)
+ */
+async function findOrCreateGuestUser(name: string, email: string | null): Promise<string> {
+  if (email) {
+    const existing = await dbSelect<{ id: string }>(
+      "User",
+      `select=id&email=eq.${encodeURIComponent(email)}&limit=1`
+    );
+    if (existing.length > 0) return existing[0].id;
+  }
+
+  const id = randomUUID();
   const now = new Date().toISOString();
-  await dbInsert("User", [
-    {
-      id: guestUserId,
-      name: input.customer.name,
-      email: input.customer.email || null,
-      updatedAt: now,
-    },
-  ]);
+  try {
+    await dbInsert("User", [{ id, name, email: email || null, updatedAt: now }]);
+    return id;
+  } catch (err) {
+    // Rare race: two orders with the same brand-new email created their
+    // User rows at almost the same moment, and this one lost the race
+    // after already passing the "doesn't exist yet" check above. Rather
+    // than fail the whole order, look the row up again and reuse whichever
+    // one actually landed.
+    if (email) {
+      const existing = await dbSelect<{ id: string }>(
+        "User",
+        `select=id&email=eq.${encodeURIComponent(email)}&limit=1`
+      );
+      if (existing.length > 0) return existing[0].id;
+    }
+    throw err;
+  }
+}
+
+export async function saveOrder(input: SaveOrderInput): Promise<Order> {
+  const guestUserId = await findOrCreateGuestUser(input.customer.name, input.customer.email || null);
 
   const trackingId = generateTrackingId();
   const orderId = randomUUID();
