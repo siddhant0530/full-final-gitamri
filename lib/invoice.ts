@@ -3,6 +3,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 import { dbRpc, dbUpdate } from "./supabase";
 import { stateFromPincode } from "./pincode-state";
+import { prepaidDiscountRateForWeight } from "./pricing";
 import { products as catalog } from "@/data/products";
 import { company } from "@/data/company";
 import type { Order } from "./order-store";
@@ -240,11 +241,26 @@ const RIGHT_EDGE = PAGE_WIDTH - MARGIN;
  * unusual character in someone's address can never take down the whole
  * PDF again.
  */
+// Windows-1252 (WinAnsi)'s upper range (0x80-0x9F) maps to these specific
+// Unicode code points — real, WinAnsi-encodable characters that just
+// happen to sit well above the 0x00-0xFF cutoff sanitizeForPdf otherwise
+// uses. Without this allowlist, sanitizeForPdf would mangle the very
+// ellipsis it adds when truncating text (a real bug this shipped with
+// earlier tonight — showed up as a stray "?" on a live customer invoice
+// where "…" should have been), plus any customer-typed curly quotes,
+// en/em dashes, or bullets.
+const WINANSI_UPPER_RANGE = new Set([
+  "\u20AC", "\u201A", "\u0192", "\u201E", "\u2026", "\u2020", "\u2021",
+  "\u02C6", "\u2030", "\u0160", "\u2039", "\u0152", "\u017D", "\u2018",
+  "\u2019", "\u201C", "\u201D", "\u2022", "\u2013", "\u2014", "\u02DC",
+  "\u2122", "\u0161", "\u203A", "\u0153", "\u017E", "\u0178",
+]);
+
 function sanitizeForPdf(str: string): string {
   return str
     .replace(/[\r\n\t]+/g, " ") // line/tab breaks -> single space, keeps it one line
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "") // other control chars
-    .replace(/[^\u0000-\u00FF]/g, "?") // outside WinAnsi's practical range (emoji, non-Latin scripts, etc.)
+    .replace(/[^\u0000-\u00FF]/g, (ch) => (WINANSI_UPPER_RANGE.has(ch) ? ch : "?")) // outside WinAnsi's range
     .replace(/ {2,}/g, " ")
     .trim();
 }
@@ -517,8 +533,25 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   order.items.forEach((item, idx) => {
     const product = catalog.find((p) => p.id === item.productId);
     const hsn = product?.hsnCode || "";
-    const lineInclusive = item.price * item.quantity;
-    const gst = splitInclusiveGst(lineInclusive, isIntraState);
+    const lineListInclusive = item.price * item.quantity;
+
+    // GST is legally due on the amount actually paid, not the pre-discount
+    // list price — Section 15 of the CGST Act requires discounts known at
+    // the time of supply to reduce the taxable value. The prepaid discount
+    // (online orders only, tiered by jar size) is applied here from the
+    // exact same rate table pricing.ts used when the order was charged, so
+    // the invoice can never drift from what the customer actually paid.
+    // "Rate" below still shows the full list price (standard invoice
+    // convention — MRP in Rate, reduction in Disc. %, net amount in Amount).
+    const discountRate = order.paymentMethod === "ONLINE" ? prepaidDiscountRateForWeight(item.weight) : 0;
+    // Rounded to whole rupees, in that order — exactly mirroring
+    // calculateOrderTotal() in pricing.ts, which is what actually
+    // determined order.total at checkout. Rounding in paise here instead
+    // would leave a small but real mismatch against the amount the
+    // customer was actually charged.
+    const lineDiscountPaise = Math.round(lineListInclusive * discountRate) * 100;
+    const lineNetInclusive = lineListInclusive - lineDiscountPaise / 100;
+    const gst = splitInclusiveGst(lineNetInclusive, isIntraState);
 
     totalCgst += gst.cgstPaise;
     totalSgst += gst.sgstPaise;
@@ -541,10 +574,14 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     text(hsn || "-", col.hsn, y, { size: 8, align: "center", maxWidth: col.hsnW });
     text(`${item.quantity} PCS`, col.qty, y, { size: 8, align: "center", maxWidth: col.qtyW });
     text(item.price.toFixed(2), col.rate, y, { size: 8, align: "right", maxWidth: col.rateW - 4 });
-    text("-", col.disc, y, { size: 8, align: "center", maxWidth: col.discW });
-    // Amount here is the line's taxable (pre-tax) value, not the tax-inclusive
-    // total — tax is added back in below via the OUTPUT CGST/SGST rows, matching
-    // how the reference Tally invoice presents it.
+    text(discountRate > 0 ? `${(discountRate * 100).toFixed(0)}%` : "-", col.disc, y, {
+      size: 8,
+      align: "center",
+      maxWidth: col.discW,
+    });
+    // Amount here is the line's taxable (pre-tax, post-discount) value —
+    // tax is added back in below via the OUTPUT CGST/SGST/IGST rows,
+    // matching how the reference Tally invoice presents it.
     text(rupees(gst.taxableValuePaise), col.amount, y, { size: 8, align: "right", maxWidth: col.amountW - 4 });
   });
 

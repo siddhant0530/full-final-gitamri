@@ -23,6 +23,7 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState("");
   const [tab, setTab] = useState<"orders" | "reviews" | "analytics">("orders");
   const [orders, setOrders] = useState<Order[]>([]);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | "ALL">("ALL");
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewLinks, setReviewLinks] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -171,6 +172,14 @@ export default function AdminPage() {
     alert("Review link copied — send it to the customer over WhatsApp or email.");
   }
 
+  function copyTrackingLink(trackingId: string) {
+    // window.location.origin (not a hardcoded domain) so this is correct
+    // on production, a Vercel preview deploy, or localhost alike.
+    const link = `${window.location.origin}/order-confirmation/${trackingId}`;
+    navigator.clipboard?.writeText(link);
+    alert("Tracking link copied — send it to the customer over WhatsApp or email.");
+  }
+
   // All analytics are derived client-side from the orders already loaded
   // for the Orders tab — no separate API call needed. Recomputed only
   // when the orders list actually changes.
@@ -276,6 +285,26 @@ export default function AdminPage() {
     };
   }, [orders]);
 
+  // Counts per status (from the full unfiltered list) so the filter
+  // buttons can show how many orders are in each bucket, and the filtered
+  // list actually shown in the Orders tab.
+  const orderStatusCounts = useMemo(() => {
+    const counts: Record<OrderStatus, number> = {
+      PENDING: 0,
+      PROCESSING: 0,
+      SHIPPED: 0,
+      DELIVERED: 0,
+      CANCELLED: 0,
+    };
+    for (const order of orders) counts[order.status]++;
+    return counts;
+  }, [orders]);
+
+  const filteredOrders = useMemo(
+    () => (orderStatusFilter === "ALL" ? orders : orders.filter((o) => o.status === orderStatusFilter)),
+    [orders, orderStatusFilter]
+  );
+
   if (status === "checking") {
     return (
       <main className="mx-auto max-w-sm px-6 py-24 text-center text-zinc-500">
@@ -359,15 +388,50 @@ export default function AdminPage() {
           {loading && <p>Loading orders...</p>}
           {!loading && orders.length === 0 && <p>No orders yet.</p>}
 
+          {orders.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              {(["ALL", "PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as const).map((s) => {
+                const count = s === "ALL" ? orders.length : orderStatusCounts[s];
+                const active = orderStatusFilter === s;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setOrderStatusFilter(s)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+                      active
+                        ? "bg-[#183F35] text-white"
+                        : "border border-gray-300 text-zinc-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {!loading && orders.length > 0 && filteredOrders.length === 0 && (
+            <p className="text-zinc-500">No orders with this status.</p>
+          )}
+
           <div className="space-y-4">
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <div
                 key={order.id}
                 className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-bold">{order.trackingId}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold">{order.trackingId}</p>
+                      <button
+                        onClick={() => copyTrackingLink(order.trackingId)}
+                        title="Copy a customer-facing tracking link"
+                        className="rounded-full border border-gray-300 px-2.5 py-0.5 text-xs font-semibold text-zinc-600 hover:bg-gray-50"
+                      >
+                        Copy Tracking Link
+                      </button>
+                    </div>
                     <p className="text-sm text-zinc-500">
                       {new Date(order.createdAt).toLocaleString()}
                     </p>
