@@ -94,7 +94,14 @@ export default function ProductCard({ product }: { product: Product }) {
   </span>
 )}
         <div
-          className={`relative mx-auto h-40 w-full transition-transform duration-500 ease-out group-hover:scale-105 ${
+          // Card size stays exactly as it was — only the image itself is
+          // scaled up within this same-sized box. The product photos have
+          // a fair amount of empty space around the jar, so the jar was
+          // reading as small even though the box itself was a fine size;
+          // scaling the image up (not the box) makes the jar fill more of
+          // it without shifting the card's height or layout at all. The
+          // parent already has overflow-hidden, so this crops cleanly.
+          className={`relative mx-auto h-40 w-full scale-110 transition-transform duration-500 ease-out group-hover:scale-[1.18] ${
             !product.inStock ? "grayscale opacity-60" : ""
           }`}
         >
