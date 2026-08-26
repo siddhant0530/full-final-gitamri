@@ -179,6 +179,8 @@ export default function AdminPage() {
     const byCity = new Map<string, { orders: number; revenue: number }>();
     const byProduct = new Map<string, { name: string; quantity: number; revenue: number }>();
     const byWeight = new Map<string, number>();
+    const byMonth = new Map<string, { label: string; year: number; orders: number; revenue: number }>();
+    const byYear = new Map<number, { orders: number; revenue: number }>();
     let codCount = 0;
     let onlineCount = 0;
     let totalRevenue = 0;
@@ -203,6 +205,23 @@ export default function AdminPage() {
       cityEntry.revenue += order.total;
       byCity.set(city, cityEntry);
 
+      // Month-wise + year-wise, keyed off when the order was actually
+      // placed — lets the business see seasonal trends and this year's
+      // running total, not just an all-time lump sum.
+      const orderDate = new Date(order.createdAt);
+      const year = orderDate.getFullYear();
+      const monthKey = `${year}-${String(orderDate.getMonth() + 1).padStart(2, "0")}`;
+      const monthLabel = orderDate.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+      const monthEntry = byMonth.get(monthKey) ?? { label: monthLabel, year, orders: 0, revenue: 0 };
+      monthEntry.orders += 1;
+      monthEntry.revenue += order.total;
+      byMonth.set(monthKey, monthEntry);
+
+      const yearEntry = byYear.get(year) ?? { orders: 0, revenue: 0 };
+      yearEntry.orders += 1;
+      yearEntry.revenue += order.total;
+      byYear.set(year, yearEntry);
+
       for (const item of order.items) {
         const entry = byProduct.get(item.productId) ?? {
           name: item.name,
@@ -223,11 +242,16 @@ export default function AdminPage() {
       key: keyof T
     ) => [...arr].sort((a, b) => (Number(b[key]) || 0) - (Number(a[key]) || 0));
 
+    const currentYear = new Date().getFullYear();
+    const yearToDate = byYear.get(currentYear) ?? { orders: 0, revenue: 0 };
+
     return {
       totalOrders: orders.length,
       totalRevenue,
       codCount,
       onlineCount,
+      currentYear,
+      yearToDate,
       byState: sortDesc(
         Array.from(byState, ([state, v]) => ({ state, ...v })),
         "orders"
@@ -243,6 +267,12 @@ export default function AdminPage() {
       byWeight: Array.from(byWeight, ([weight, quantity]) => ({ weight, quantity })).sort(
         (a, b) => b.quantity - a.quantity
       ),
+      // Chronological (oldest -> newest) — a trend reads naturally left to
+      // right, unlike the other breakdowns above which rank by size.
+      byMonth: Array.from(byMonth, ([key, v]) => ({ key, ...v })).sort((a, b) =>
+        a.key.localeCompare(b.key)
+      ),
+      byYear: Array.from(byYear, ([year, v]) => ({ year, ...v })).sort((a, b) => a.year - b.year),
     };
   }, [orders]);
 
@@ -554,6 +584,61 @@ export default function AdminPage() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Cash on Delivery</p>
                   <p className="mt-1 text-2xl font-bold text-[#183F35]">{analytics.codCount}</p>
                 </div>
+              </div>
+
+              {/* Monthly Sales */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-lg font-bold text-[#183F35]">Monthly Sales</h2>
+                  <div className="rounded-full bg-gold-50 px-4 py-1.5 text-sm font-semibold text-gold-800">
+                    {analytics.currentYear} Year to Date: {analytics.yearToDate.orders} order
+                    {analytics.yearToDate.orders !== 1 ? "s" : ""} · {formatPrice(analytics.yearToDate.revenue)}
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Every month with at least one order, oldest to newest, up to the current month.
+                </p>
+                <div className="mt-4 space-y-3">
+                  {analytics.byMonth.map((row) => {
+                    const maxRevenue = Math.max(...analytics.byMonth.map((m) => m.revenue), 1);
+                    const pct = Math.round((row.revenue / maxRevenue) * 100);
+                    return (
+                      <div key={row.key}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-zinc-800">{row.label}</span>
+                          <span className="text-zinc-500">
+                            {row.orders} order{row.orders !== 1 ? "s" : ""} · {formatPrice(row.revenue)}
+                          </span>
+                        </div>
+                        <div className="mt-1 h-2 w-full rounded-full bg-gray-100">
+                          <div
+                            className="h-2 rounded-full bg-gold-600"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Only worth showing once there's more than one year of
+                    data — with everything in one year this table would
+                    just repeat the Year to Date figure above. */}
+                {analytics.byYear.length > 1 && (
+                  <div className="mt-6 border-t border-gray-100 pt-4">
+                    <h3 className="text-sm font-bold uppercase tracking-wide text-zinc-500">By Year</h3>
+                    <div className="mt-3 space-y-2">
+                      {analytics.byYear.map((row) => (
+                        <div key={row.year} className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-zinc-800">{row.year}</span>
+                          <span className="text-zinc-500">
+                            {row.orders} order{row.orders !== 1 ? "s" : ""} · {formatPrice(row.revenue)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Orders by State */}
