@@ -181,6 +181,28 @@ export async function getOrders(): Promise<Order[]> {
   return orderRows.map((row) => toOrder(row, itemRows));
 }
 
+/**
+ * Used by the customer account page (app/account/page.tsx) to show a
+ * logged-in customer their own order history — userId here is the
+ * "User".id row linked to their Supabase Auth account via
+ * lib/link-customer-account.ts, not the auth UID itself.
+ */
+export async function getOrdersByUserId(userId: string): Promise<Order[]> {
+  const orderRows = await dbSelect<OrderRow>(
+    "Order",
+    `select=*&userId=eq.${encodeURIComponent(userId)}&order=createdAt.desc`
+  );
+  if (orderRows.length === 0) return [];
+
+  const ids = orderRows.map((o) => o.id);
+  const itemRows = await dbSelect<OrderItemRow>(
+    "OrderItem",
+    `select=*&orderId=in.(${ids.join(",")})`
+  );
+
+  return orderRows.map((row) => toOrder(row, itemRows));
+}
+
 export async function getOrderByTrackingId(trackingId: string): Promise<Order | undefined> {
   const orderRows = await dbSelect<OrderRow>(
     "Order",

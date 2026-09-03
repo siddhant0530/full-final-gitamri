@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { isValidAdminSessionToken, ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
 
 /**
@@ -46,7 +47,7 @@ function isRateLimited(ip: string): boolean {
   return timestamps.length > RATE_LIMIT_MAX_REQUESTS;
 }
 
-const NO_STORE_PREFIXES = ["/admin", "/checkout", "/cart", "/api", "/review"];
+const NO_STORE_PREFIXES = ["/admin", "/checkout", "/cart", "/api", "/review", "/account"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -77,7 +78,39 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  const res = NextResponse.next();
+  let res = NextResponse.next({ request: req });
+
+  // Refresh the customer's Supabase Auth session cookie (if configured).
+  // This has to run on real page requests, not just /api/*, because an
+  // expired auth token needs refreshing before a page like /account
+  // renders — hence the broader matcher below.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  let isLoggedIn = false;
+
+  if (supabaseUrl && supabaseAnonKey) {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value));
+          res = NextResponse.next({ request: req });
+          cookiesToSet.forEach(({ name, value, options }) => res.cookies.set(name, value, options));
+        },
+      },
+    });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    isLoggedIn = !!user;
+  }
+
+  if (pathname.startsWith("/account") && !isLoggedIn) {
+    return NextResponse.redirect(new URL(`/login?next=${pathname}`, req.url));
+  }
+
   if (NO_STORE_PREFIXES.some((p) => pathname.startsWith(p))) {
     res.headers.set("Cache-Control", "no-store, max-age=0");
   }
@@ -85,5 +118,14 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/checkout/:path*", "/cart/:path*", "/api/:path*", "/review/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/checkout/:path*",
+    "/cart/:path*",
+    "/api/:path*",
+    "/review/:path*",
+    "/account/:path*",
+    "/login",
+    "/auth/:path*",
+  ],
 };
