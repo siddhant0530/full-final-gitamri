@@ -7,6 +7,7 @@ import { prepaidDiscountRateForWeight } from "./pricing";
 import { products as catalog } from "@/data/products";
 import { company } from "@/data/company";
 import type { Order } from "./order-store";
+import { formatOrderNumber } from "./order-store";
 
 /**
  * GST INVOICE GENERATION
@@ -27,7 +28,7 @@ export const COMPANY = {
   addressLines: [
     "FL NO - 102, SUMAN TOWER",
     "SUMAN NAGARI, GODHANI RLY, GODHANI",
-    "NAGPUR",
+    "NAGPUR, Maharashtra - 441123",
   ],
   state: "Maharashtra",
   stateCode: "27",
@@ -71,7 +72,7 @@ const STATE_GST_CODE: Record<string, string> = {
 // case — typed by hand at checkout, or from the pincode-lookup API — and a
 // mismatch here would silently break both the GST code lookup and the
 // intra-state vs inter-state (CGST+SGST vs IGST) decision below.
-function normalizeStateName(raw: string): string {
+export function normalizeStateName(raw: string): string {
   const trimmed = raw.trim();
   const match = Object.keys(STATE_GST_CODE).find(
     (canonical) => canonical.toLowerCase() === trimmed.toLowerCase()
@@ -183,14 +184,6 @@ function rupeesInWords(rupeesAmount: number): string {
   return `INR ${integerToWords(Math.round(rupeesAmount))} Only`;
 }
 
-/** e.g. 28.94 -> "INR Twenty Eight and Ninety Four Paise Only" */
-function amountInWordsWithPaise(amount: number): string {
-  const rupeePart = Math.floor(amount);
-  const paisePart = Math.round((amount - rupeePart) * 100);
-  if (paisePart === 0) return rupeesInWords(rupeePart);
-  return `INR ${integerToWords(rupeePart)} and ${integerToWords(paisePart)} Paise Only`;
-}
-
 /**
  * Returns this order's invoice number, generating one the first time
  * it's requested and persisting it so every later download of the same
@@ -268,13 +261,41 @@ function sanitizeForPdf(str: string): string {
 export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   const invoiceNumber = await getOrCreateInvoiceNumber(order);
   const invoiceDate = new Date();
-  // Prefer the real state captured at checkout (order.customer.state, via
-  // /api/pincode) since it's exact — the pincode-prefix approximation in
-  // lib/pincode-state.ts is only a fallback for orders placed before that
-  // field existed.
-  const placeOfSupply = normalizeStateName(order.customer.state || stateFromPincode(order.customer.pincode));
+
+  // Ship-to falls back to the billing address when the customer didn't
+  // use the "ship to a different address" option at checkout (the
+  // normal case) — see ShippingAddress on Order in lib/order-store.ts.
+  const shipTo = order.shippingAddress ?? {
+    name: order.customer.name,
+    phone: order.customer.phone,
+    address: order.customer.address,
+    city: order.customer.city,
+    pincode: order.customer.pincode,
+    state: order.customer.state,
+  };
+  const billTo = order.customer;
+
+  // GST's "place of supply" for goods is the recipient's (ship-to)
+  // location, not the billing address — this matters once bill-to and
+  // ship-to can actually differ. Falls back the same way the old
+  // billing-only code did: real state if captured, else approximated
+  // from pincode.
+  const placeOfSupply = normalizeStateName(shipTo.state || stateFromPincode(shipTo.pincode));
   const isIntraState = placeOfSupply === COMPANY.state;
   const buyerStateCode = STATE_GST_CODE[placeOfSupply] ?? "";
+
+  // Billing address gets its own state line, independent of the tax
+  // calculation above, for display in the Buyer (Bill to) box only.
+  const billToState = normalizeStateName(billTo.state || stateFromPincode(billTo.pincode));
+  const billToStateCode = STATE_GST_CODE[billToState] ?? "";
+
+  const addressesMatch =
+    shipTo.name.trim().toLowerCase() === billTo.name.trim().toLowerCase() &&
+    shipTo.phone.trim() === billTo.phone.trim() &&
+    shipTo.address.trim().toLowerCase() === billTo.address.trim().toLowerCase() &&
+    shipTo.city.trim().toLowerCase() === billTo.city.trim().toLowerCase() &&
+    shipTo.pincode.trim() === billTo.pincode.trim() &&
+    (shipTo.state || "").trim().toLowerCase() === (billTo.state || "").trim().toLowerCase();
 
   // A GST tax invoice legally needs an HSN code on every line. HSN codes
   // are deliberately left blank in the catalog until confirmed (see
@@ -286,6 +307,16 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     return Boolean(product?.hsnCode);
   });
 
+  // Rendered in two passes: first on a generously tall scratch page
+  // purely to measure how much vertical space this order's content
+  // actually needs (item count varies per order), then for real on a
+  // page trimmed to fit that. Cuts paper meaningfully vs. always using
+  // a full A4 sheet when a typical 1-2 item order only fills about
+  // half of it (approved paper-saving change).
+  const TOP_MARGIN = PAGE_HEIGHT - 805; // preserves the original title position exactly
+  const BOTTOM_MARGIN = 20;
+
+  async function renderPass(pageHeight: number): Promise<{ bytes: Uint8Array; finalY: number }> {
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -299,7 +330,19 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     logoImage = null;
   }
 
-  const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+  // Siddhant's actual signature, dropped into the Authorised Signatory
+  // block below in place of a printed name — falls back to leaving that
+  // space blank (rather than crashing invoice generation) if the asset
+  // is ever missing.
+  let signatureImage: Awaited<ReturnType<typeof pdfDoc.embedPng>> | null = null;
+  try {
+    const signatureBytes = await readFile(path.join(process.cwd(), "public", "signature.png"));
+    signatureImage = await pdfDoc.embedPng(signatureBytes);
+  } catch {
+    signatureImage = null;
+  }
+
+  const page = pdfDoc.addPage([PAGE_WIDTH, pageHeight]);
 
   function text(
     str: string,
@@ -367,7 +410,7 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   // ============================================================
   // Title
   // ============================================================
-  let y = 805;
+  let y = pageHeight - TOP_MARGIN;
   text("Tax Invoice", MARGIN, y, { size: 15, f: bold, align: "center", maxWidth: RIGHT_EDGE - MARGIN });
   y -= 22;
 
@@ -379,9 +422,12 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   const rightW = RIGHT_EDGE - midX;
   const subColW = rightW / 2;
 
-  // --- Row A: 128pt tall ---
-  const rowAHeight = 128;
-  const rowAFieldH = rowAHeight / 4;
+  // --- Row A: 2 rows only — Reference No./Buyer's Order No./Other
+  // References/second Dated were all always-blank fields nobody used;
+  // removed per CEO sign-off, which also shrinks this box (approved
+  // paper-saving change) rather than leaving it half-empty.
+  const rowAHeight = 100;
+  const rowAFieldH = rowAHeight / 2;
 
   rect(MARGIN, headerTop, midX - MARGIN, rowAHeight); // company cell
   rect(midX, headerTop, rightW, rowAHeight); // right meta outer box
@@ -409,12 +455,12 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   cy -= 10;
   text(`E-Mail : ${COMPANY.email}`, MARGIN + 6, cy, { size: 8 });
 
-  // Right meta grid: 4 rows x 2 label/value columns
+  // Right meta grid: 2 rows x 2 label/value columns. "Order No." (was
+  // "Delivery Note", always blank) now shows the order's actual
+  // sequential number — see formatOrderNumber() in lib/order-store.ts.
   const metaRows: [string, string, string, string][] = [
     ["Invoice No.", invoiceNumber, "Dated", formatInvoiceDate(invoiceDate)],
-    ["Delivery Note", "", "Mode/Terms of Payment", order.paymentMethod === "ONLINE" ? "Prepaid (Online)" : "Cash on Delivery"],
-    ["Reference No. & Date.", "", "Other References", ""],
-    ["Buyer's Order No.", "", "Dated", ""],
+    ["Order No.", formatOrderNumber(order), "Mode/Terms of Payment", order.paymentMethod === "ONLINE" ? "Prepaid(PG)" : "Cash on Delivery"],
   ];
   metaRows.forEach((row, i) => {
     const rowTop = headerTop - i * rowAFieldH;
@@ -427,52 +473,84 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     text(truncateToFit(val2, subColW - 6, bold, 8), midX + subColW + 4, rowTop - 21, { size: 8, f: bold });
   });
 
-  // --- Row B: Consignee + Buyer (left, stacked) vs dispatch info (right) ---
+  // --- Row B: Consignee + Buyer (left) vs dispatch info (right) ---
+  // Merged into a single box when ship-to and bill-to are the same
+  // (the normal case) to avoid printing identical information twice;
+  // split into the original two boxes — each with its own actual
+  // address — only when the customer used a different shipping address.
   const rowBTop = headerTop - rowAHeight;
-  const consigneeH = 70;
-  const buyerH = 92;
-  const rowBHeight = consigneeH + buyerH;
-
-  rect(MARGIN, rowBTop, midX - MARGIN, consigneeH);
-  rect(MARGIN, rowBTop - consigneeH, midX - MARGIN, buyerH);
-  rect(midX, rowBTop, rightW, rowBHeight);
+  // Heights differ by case: the merged box carries its own Place of
+  // Supply line (+10pt over the original 92), and in the split case
+  // that line moves to Consignee instead (+10pt there, Buyer reverts
+  // to its original unpadded height) — see the comments in each branch
+  // below for why it lives where it does.
+  const mergedBoxH = 102;
+  const consigneeH = addressesMatch ? 0 : 80;
+  const buyerH = addressesMatch ? 0 : 92;
+  const rowBHeight = addressesMatch ? mergedBoxH : consigneeH + buyerH;
 
   const leftCellW = midX - MARGIN - 12;
-  // Consignee (Ship to)
-  let sy = rowBTop - 10;
-  text("Consignee (Ship to)", MARGIN + 6, sy, { size: 7.5, f: italic });
-  sy -= 11;
-  text(truncateToFit(`${order.customer.name} - ${order.customer.phone}`, leftCellW, bold, 8.5), MARGIN + 6, sy, { size: 8.5, f: bold });
-  sy -= 10;
-  text(truncateToFit(order.customer.address, leftCellW, font, 8), MARGIN + 6, sy, { size: 8 });
-  sy -= 10;
-  text(`${order.customer.city} - ${order.customer.pincode}`, MARGIN + 6, sy, { size: 8 });
-  sy -= 10;
-  text(`State Name : ${placeOfSupply}${buyerStateCode ? `, Code : ${buyerStateCode}` : ""}`, MARGIN + 6, sy, { size: 8 });
 
-  // Buyer (Bill to)
-  let by = rowBTop - consigneeH - 10;
-  text("Buyer (Bill to)", MARGIN + 6, by, { size: 7.5, f: italic });
-  by -= 11;
-  text(truncateToFit(`${order.customer.name} - ${order.customer.phone}`, leftCellW, bold, 8.5), MARGIN + 6, by, { size: 8.5, f: bold });
-  by -= 10;
-  text(truncateToFit(order.customer.address, leftCellW, font, 8), MARGIN + 6, by, { size: 8 });
-  by -= 10;
-  text(`${order.customer.city} - ${order.customer.pincode}`, MARGIN + 6, by, { size: 8 });
-  by -= 10;
-  text(`State Name : ${placeOfSupply}${buyerStateCode ? `, Code : ${buyerStateCode}` : ""}`, MARGIN + 6, by, { size: 8 });
+  if (addressesMatch) {
+    rect(MARGIN, rowBTop, midX - MARGIN, mergedBoxH);
+    rect(midX, rowBTop, rightW, rowBHeight);
 
-  // Dispatch info grid on the right: 3 rows + a taller Terms-of-Delivery row
+    let by = rowBTop - 10;
+    text("Consignee & Buyer (Bill to / Ship to)", MARGIN + 6, by, { size: 7.5, f: italic });
+    by -= 11;
+    text(truncateToFit(`${billTo.name} - ${billTo.phone}`, leftCellW, bold, 8.5), MARGIN + 6, by, { size: 8.5, f: bold });
+    by -= 10;
+    text(truncateToFit(billTo.address, leftCellW, font, 8), MARGIN + 6, by, { size: 8 });
+    by -= 10;
+    text(`${billTo.city} - ${billTo.pincode}`, MARGIN + 6, by, { size: 8 });
+    by -= 10;
+    text(`State Name : ${placeOfSupply}${buyerStateCode ? `, Code : ${buyerStateCode}` : ""}`, MARGIN + 6, by, { size: 8 });
+    by -= 10;
+    text(`Place of Supply : ${placeOfSupply}`, MARGIN + 6, by, { size: 8, f: bold });
+  } else {
+    rect(MARGIN, rowBTop, midX - MARGIN, consigneeH);
+    rect(MARGIN, rowBTop - consigneeH, midX - MARGIN, buyerH);
+    rect(midX, rowBTop, rightW, rowBHeight);
+
+    // Consignee (Ship to) — the actual delivery address. Place of Supply
+    // lives here, not in Buyer — it's legally the ship-to location, and
+    // Consignee is what's actually being shown here.
+    let sy = rowBTop - 10;
+    text("Consignee (Ship to)", MARGIN + 6, sy, { size: 7.5, f: italic });
+    sy -= 11;
+    text(truncateToFit(`${shipTo.name} - ${shipTo.phone}`, leftCellW, bold, 8.5), MARGIN + 6, sy, { size: 8.5, f: bold });
+    sy -= 10;
+    text(truncateToFit(shipTo.address, leftCellW, font, 8), MARGIN + 6, sy, { size: 8 });
+    sy -= 10;
+    text(`${shipTo.city} - ${shipTo.pincode}`, MARGIN + 6, sy, { size: 8 });
+    sy -= 10;
+    text(`State Name : ${placeOfSupply}${buyerStateCode ? `, Code : ${buyerStateCode}` : ""}`, MARGIN + 6, sy, { size: 8 });
+    sy -= 10;
+    text(`Place of Supply : ${placeOfSupply}`, MARGIN + 6, sy, { size: 8, f: bold });
+
+    // Buyer (Bill to) — the billing address, independent of the above.
+    // No Place of Supply here — it's a ship-to concept, shown once
+    // above in Consignee, not duplicated in the billing box.
+    let by = rowBTop - consigneeH - 10;
+    text("Buyer (Bill to)", MARGIN + 6, by, { size: 7.5, f: italic });
+    by -= 11;
+    text(truncateToFit(`${billTo.name} - ${billTo.phone}`, leftCellW, bold, 8.5), MARGIN + 6, by, { size: 8.5, f: bold });
+    by -= 10;
+    text(truncateToFit(billTo.address, leftCellW, font, 8), MARGIN + 6, by, { size: 8 });
+    by -= 10;
+    text(`${billTo.city} - ${billTo.pincode}`, MARGIN + 6, by, { size: 8 });
+    by -= 10;
+    text(`State Name : ${billToState}${billToStateCode ? `, Code : ${billToStateCode}` : ""}`, MARGIN + 6, by, { size: 8 });
+  }
+
+  // Dispatch info grid on the right: 3 rows. "Bill of Lading/LR-RR No."
+  // renamed to the plainer "Tracking ID" (same AWB value); Motor Vehicle
+  // No. and Terms of Delivery removed — both always blank/NA, never
+  // used. Destination is the actual ship-to city, not billing.
   const dispatchRowH = 28;
   const dispatchRows: [string, string, string, string][] = [
     ["Dispatch Doc No.", invoiceNumber, "Delivery Note Date", formatInvoiceDate(invoiceDate)],
-    ["Dispatched through", "Delhivery Logistics", "Destination", order.customer.city],
-    [
-      "Bill of Lading/LR-RR No.",
-      order.delhiveryWaybill ? `AWB# ${order.delhiveryWaybill}` : "",
-      "Motor Vehicle No.",
-      "NA",
-    ],
+    ["Dispatched through", "Delhivery Logistics", "Destination", shipTo.city],
   ];
   dispatchRows.forEach((row, i) => {
     const rowTop = rowBTop - i * dispatchRowH;
@@ -484,9 +562,15 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     text(label2, midX + subColW + 4, rowTop - 10, { size: 7.5 });
     text(val2, midX + subColW + 4, rowTop - 21, { size: 8, f: bold });
   });
-  const termsRowTop = rowBTop - 3 * dispatchRowH;
-  hLine(midX, RIGHT_EDGE, termsRowTop);
-  text("Terms of Delivery", midX + 4, termsRowTop - 10, { size: 7.5 });
+  const trackingRowTop = rowBTop - 2 * dispatchRowH;
+  hLine(midX, RIGHT_EDGE, trackingRowTop);
+  text("Tracking ID", midX + 4, trackingRowTop - 10, { size: 7.5 });
+  text(
+    truncateToFit(order.delhiveryWaybill ? `AWB# ${order.delhiveryWaybill}` : "", rightW - 8, bold, 7.5),
+    midX + 4,
+    trackingRowTop - 21,
+    { size: 7.5, f: bold }
+  );
 
   y = rowBTop - rowBHeight - 8;
 
@@ -528,7 +612,6 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   let totalIgst = 0;
   let grandTotal = 0;
   let totalQty = 0;
-  const hsnGroups = new Map<string, { taxable: number; cgst: number; sgst: number; igst: number }>();
 
   order.items.forEach((item, idx) => {
     const product = catalog.find((p) => p.id === item.productId);
@@ -559,18 +642,16 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     grandTotal += gst.totalPaise;
     totalQty += item.quantity;
 
-    const groupKey = hsn || "—";
-    const g = hsnGroups.get(groupKey) ?? { taxable: 0, cgst: 0, sgst: 0, igst: 0 };
-    g.taxable += gst.taxableValuePaise;
-    g.cgst += gst.cgstPaise;
-    g.sgst += gst.sgstPaise;
-    g.igst += gst.igstPaise;
-    hsnGroups.set(groupKey, g);
-
     y -= 12;
     text(String(idx + 1), col.sno, y, { size: 8 });
-    const label = `${item.name}${item.weight ? ` | ${item.weight}` : ""}`;
-    text(truncateToFit(label, col.descW - 4, bold, 8), col.desc, y, { size: 8, f: bold });
+    // Weight suffix is reserved space and truncated separately from the
+    // name, so a long product name can never push the weight (220g/500g)
+    // off the edge and out of view entirely — that used to be possible
+    // when the combined "name | weight" string was truncated as one unit.
+    const weightSuffix = item.weight ? ` | ${item.weight}` : "";
+    const nameMaxWidth = col.descW - 4 - bold.widthOfTextAtSize(sanitizeForPdf(weightSuffix), 8);
+    const label = truncateToFit(item.name, nameMaxWidth, bold, 8) + weightSuffix;
+    text(label, col.desc, y, { size: 8, f: bold });
     text(hsn || "-", col.hsn, y, { size: 8, align: "center", maxWidth: col.hsnW });
     text(`${item.quantity} PCS`, col.qty, y, { size: 8, align: "center", maxWidth: col.qtyW });
     text(item.price.toFixed(2), col.rate, y, { size: 8, align: "right", maxWidth: col.rateW - 4 });
@@ -649,107 +730,6 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   hLine(MARGIN, RIGHT_EDGE, y);
 
   // ============================================================
-  // HSN-wise tax summary
-  // ============================================================
-  const hsnCol = {
-    hsn: MARGIN,
-    taxable: MARGIN + 130,
-    taxableW: 80,
-    cgstRate: MARGIN + 210,
-    cgstRateW: 40,
-    cgstAmt: MARGIN + 250,
-    cgstAmtW: 60,
-    sgstRate: MARGIN + 310,
-    sgstRateW: 40,
-    sgstAmt: MARGIN + 350,
-    sgstAmtW: 60,
-    totalTax: MARGIN + 410,
-    totalTaxW: RIGHT_EDGE - (MARGIN + 410),
-  };
-  const summaryTop = y;
-  const groupHeaderY = summaryTop - 10; // "HSN/SAC", "Taxable", "CGST", "SGST/UTGST", "Total"
-  const groupHeaderY2 = summaryTop - 19; // "Value" / "Tax Amount" second line
-  const groupDividerY = summaryTop - 24; // separates CGST/SGST group label from Rate|Amount sub-labels
-  const subHeaderY = summaryTop - 33; // "Rate" / "Amount" sub-labels
-  const headerBottomY = summaryTop - 39;
-
-  text("HSN/SAC", hsnCol.hsn + 4, groupHeaderY, { size: 7.5, f: bold });
-  text("Taxable", hsnCol.taxable, groupHeaderY, { size: 7, f: bold, align: "center", maxWidth: hsnCol.taxableW });
-  text("Value", hsnCol.taxable, groupHeaderY2, { size: 7, f: bold, align: "center", maxWidth: hsnCol.taxableW });
-  text("CGST", hsnCol.cgstRate, groupHeaderY, { size: 7, f: bold, align: "center", maxWidth: hsnCol.cgstAmt + hsnCol.cgstAmtW - hsnCol.cgstRate });
-  text("SGST/UTGST", hsnCol.sgstRate, groupHeaderY, { size: 7, f: bold, align: "center", maxWidth: hsnCol.sgstAmt + hsnCol.sgstAmtW - hsnCol.sgstRate });
-  text("Total", hsnCol.totalTax, groupHeaderY, { size: 7, f: bold, align: "center", maxWidth: hsnCol.totalTaxW });
-  text("Tax Amount", hsnCol.totalTax, groupHeaderY2, { size: 6.5, f: bold, align: "center", maxWidth: hsnCol.totalTaxW });
-
-  hLine(hsnCol.cgstRate, hsnCol.cgstAmt + hsnCol.cgstAmtW, groupDividerY);
-  hLine(hsnCol.sgstRate, hsnCol.sgstAmt + hsnCol.sgstAmtW, groupDividerY);
-  text("Rate", hsnCol.cgstRate, subHeaderY, { size: 6.5, f: bold, align: "center", maxWidth: hsnCol.cgstRateW });
-  text("Amount", hsnCol.cgstAmt, subHeaderY, { size: 6.5, f: bold, align: "center", maxWidth: hsnCol.cgstAmtW });
-  text("Rate", hsnCol.sgstRate, subHeaderY, { size: 6.5, f: bold, align: "center", maxWidth: hsnCol.sgstRateW });
-  text("Amount", hsnCol.sgstAmt, subHeaderY, { size: 6.5, f: bold, align: "center", maxWidth: hsnCol.sgstAmtW });
-
-  y = headerBottomY;
-  hLine(MARGIN, RIGHT_EDGE, y);
-
-  let sumTaxable = 0;
-  let sumCgst = 0;
-  let sumSgst = 0;
-  let sumIgst = 0;
-  for (const [hsn, g] of hsnGroups.entries()) {
-    y -= 12;
-    text(hsn, hsnCol.hsn + 4, y, { size: 8 });
-    text(rupees(g.taxable), hsnCol.taxable, y, { size: 8, align: "right", maxWidth: hsnCol.taxableW - 4 });
-    if (isIntraState) {
-      text("2.50%", hsnCol.cgstRate, y, { size: 8, align: "center", maxWidth: hsnCol.cgstRateW });
-      text(rupees(g.cgst), hsnCol.cgstAmt, y, { size: 8, align: "right", maxWidth: hsnCol.cgstAmtW - 4 });
-      text("2.50%", hsnCol.sgstRate, y, { size: 8, align: "center", maxWidth: hsnCol.sgstRateW });
-      text(rupees(g.sgst), hsnCol.sgstAmt, y, { size: 8, align: "right", maxWidth: hsnCol.sgstAmtW - 4 });
-    } else {
-      text("-", hsnCol.cgstRate, y, { size: 8, align: "center", maxWidth: hsnCol.cgstRateW });
-      text("-", hsnCol.cgstAmt, y, { size: 8, align: "center", maxWidth: hsnCol.cgstAmtW });
-      text("-", hsnCol.sgstRate, y, { size: 8, align: "center", maxWidth: hsnCol.sgstRateW });
-      text("-", hsnCol.sgstAmt, y, { size: 8, align: "center", maxWidth: hsnCol.sgstAmtW });
-    }
-    const lineTax = g.cgst + g.sgst + g.igst;
-    text(rupees(lineTax), hsnCol.totalTax, y, { size: 8, align: "right", maxWidth: hsnCol.totalTaxW - 4 });
-    sumTaxable += g.taxable;
-    sumCgst += g.cgst;
-    sumSgst += g.sgst;
-    sumIgst += g.igst;
-  }
-  y -= 6;
-  hLine(MARGIN, RIGHT_EDGE, y);
-  y -= 12;
-  text("Total", hsnCol.hsn + 4, y, { size: 8, f: bold });
-  text(rupees(sumTaxable), hsnCol.taxable, y, { size: 8, f: bold, align: "right", maxWidth: hsnCol.taxableW - 4 });
-  if (isIntraState) {
-    text(rupees(sumCgst), hsnCol.cgstAmt, y, { size: 8, f: bold, align: "right", maxWidth: hsnCol.cgstAmtW - 4 });
-    text(rupees(sumSgst), hsnCol.sgstAmt, y, { size: 8, f: bold, align: "right", maxWidth: hsnCol.sgstAmtW - 4 });
-  }
-  const totalTaxAll = sumCgst + sumSgst + sumIgst;
-  text(rupees(totalTaxAll), hsnCol.totalTax, y, { size: 8, f: bold, align: "right", maxWidth: hsnCol.totalTaxW - 4 });
-  y -= 6;
-  hLine(MARGIN, RIGHT_EDGE, y);
-  rect(MARGIN, summaryTop, RIGHT_EDGE - MARGIN, summaryTop - y);
-  // Group-boundary dividers (HSN|Taxable|CGST|SGST/UTGST|Total) run the full
-  // height — they sit at true column-group edges, so they never cross the
-  // merged "CGST" / "SGST/UTGST" header text.
-  vLine(hsnCol.taxable, summaryTop, y);
-  vLine(hsnCol.cgstRate, summaryTop, y);
-  vLine(hsnCol.sgstRate, summaryTop, y);
-  vLine(hsnCol.totalTax, summaryTop, y);
-  // Rate|Amount sub-dividers only start below the group-label row, since
-  // that row shows one merged "CGST"/"SGST/UTGST" label spanning both.
-  vLine(hsnCol.cgstAmt, groupDividerY, y);
-  vLine(hsnCol.sgstAmt, groupDividerY, y);
-
-  y -= 14;
-  text("Tax Amount (in words) :", MARGIN + 4, y, { size: 8, f: italic });
-  text(amountInWordsWithPaise(totalTaxAll / 100), MARGIN + 150, y, { size: 9, f: bold });
-  y -= 10;
-  hLine(MARGIN, RIGHT_EDGE, y);
-
-  // ============================================================
   // Declaration + signatory
   // ============================================================
   const declTop = y;
@@ -773,9 +753,26 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
 
   let ry = declTop - 12;
   text(`for ${COMPANY.legalName}`, declMidX + 6, ry, { size: 8, f: bold, align: "center", maxWidth: RIGHT_EDGE - declMidX - 12 });
-  ry -= 34;
-  text("SIDDHANT KALKOTWAR", declMidX + 6, ry, { size: 8, f: bold, align: "center", maxWidth: RIGHT_EDGE - declMidX - 12 });
-  ry -= 10;
+
+  // Signature image in place of a printed name — see signatureImage
+  // embed above. Scaled to fit within a fixed box, centered.
+  const sigCellW = RIGHT_EDGE - declMidX - 24;
+  const sigMaxH = 30;
+  if (signatureImage) {
+    const scale = Math.min(sigCellW / signatureImage.width, sigMaxH / signatureImage.height);
+    const drawW = signatureImage.width * scale;
+    const drawH = signatureImage.height * scale;
+    const sigY = ry - 10 - drawH;
+    page.drawImage(signatureImage, {
+      x: declMidX + (RIGHT_EDGE - declMidX - drawW) / 2,
+      y: sigY,
+      width: drawW,
+      height: drawH,
+    });
+    ry = sigY - 3;
+  } else {
+    ry -= 34;
+  }
   text("Authorised Signatory", declMidX + 6, ry, { size: 7.5, f: italic, align: "center", maxWidth: RIGHT_EDGE - declMidX - 12 });
 
   y = declTop - declHeight - 16;
@@ -809,5 +806,12 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     );
   }
 
-  return pdfDoc.save();
+    return { bytes: await pdfDoc.save(), finalY: y };
+  }
+
+  const MEASURE_HEIGHT = 3000;
+  const measurePass = await renderPass(MEASURE_HEIGHT);
+  const neededHeight = MEASURE_HEIGHT - measurePass.finalY + BOTTOM_MARGIN;
+  const finalPass = await renderPass(neededHeight);
+  return finalPass.bytes;
 }

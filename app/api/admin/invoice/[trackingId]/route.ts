@@ -17,8 +17,15 @@ export async function GET(
     }
 
     const pdfBytes = await generateInvoicePdf(order);
+    // pdf-lib's Uint8Array return type doesn't line up with what
+    // NextResponse's body type expects in this @types/node version
+    // (a known ArrayBufferLike vs ArrayBuffer mismatch). Copying into a
+    // fresh, plain ArrayBuffer sidesteps it entirely rather than
+    // fighting the type system further.
+    const pdfArrayBuffer = new ArrayBuffer(pdfBytes.byteLength);
+    new Uint8Array(pdfArrayBuffer).set(pdfBytes);
 
-    return new NextResponse(Buffer.from(pdfBytes), {
+    return new NextResponse(pdfArrayBuffer, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

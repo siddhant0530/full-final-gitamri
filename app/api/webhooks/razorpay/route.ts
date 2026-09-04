@@ -114,6 +114,21 @@ export async function POST(req: NextRequest) {
         pincode: notes.customerPincode || "",
         state: notes.customerState || undefined,
       },
+      // Only reconstructed if the customer actually used a different
+      // shipping address at checkout — see the shipping* notes stashed
+      // in buildOrderNotes() (create-order route). Absent here means
+      // ship-to falls back to the billing address above, same as the
+      // normal (non-self-healed) order flow.
+      shippingAddress: notes.shippingAddress
+        ? {
+            name: notes.shippingName || "",
+            phone: notes.shippingPhone || "",
+            address: notes.shippingAddress,
+            city: notes.shippingCity || "",
+            pincode: notes.shippingPincode || "",
+            state: notes.shippingState || undefined,
+          }
+        : undefined,
       items,
       subtotal,
       discount,

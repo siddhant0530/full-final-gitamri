@@ -21,7 +21,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState<"checking" | "authed" | "unauthed">("checking");
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [tab, setTab] = useState<"orders" | "reviews" | "analytics">("orders");
+  const [tab, setTab] = useState<"orders" | "reviews" | "analytics" | "reports">("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | "ALL">("ALL");
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -380,6 +380,16 @@ export default function AdminPage() {
           }`}
         >
           Analytics
+        </button>
+        <button
+          onClick={() => setTab("reports")}
+          className={`px-4 py-2 text-sm font-semibold ${
+            tab === "reports"
+              ? "border-b-2 border-[#183F35] text-[#183F35]"
+              : "text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          Reports
         </button>
       </div>
 
@@ -808,6 +818,134 @@ export default function AdminPage() {
           )}
         </div>
       )}
+
+      {tab === "reports" && <ReportsPanel />}
     </main>
+  );
+}
+
+/**
+ * Custom date-range export of orders for the CEO's own monthly/yearly
+ * bookkeeping entry — order no., date, customer name, products ordered
+ * (with weight), GST value, final value. Kept as its own component
+ * since it needs local date-range state separate from everything else
+ * on this page.
+ */
+function ReportsPanel() {
+  const today = new Date().toISOString().slice(0, 10);
+  const firstOfMonth = `${today.slice(0, 7)}-01`;
+
+  const [startDate, setStartDate] = useState(firstOfMonth);
+  const [endDate, setEndDate] = useState(today);
+  const [downloading, setDownloading] = useState<"xlsx" | "pdf" | null>(null);
+  const [error, setError] = useState("");
+
+  async function download(format: "xlsx" | "pdf") {
+    setError("");
+    if (!startDate || !endDate) {
+      setError("Pick both a start and end date.");
+      return;
+    }
+    if (startDate > endDate) {
+      setError("Start date must be before end date.");
+      return;
+    }
+    setDownloading(format);
+    try {
+      const res = await fetch(`/api/admin/reports?start=${startDate}&end=${endDate}&format=${format}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Could not generate report.");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Gitamri-Orders-${startDate}_to_${endDate}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not generate report.");
+    } finally {
+      setDownloading(null);
+    }
+  }
+
+  function setThisMonth() {
+    setStartDate(firstOfMonth);
+    setEndDate(today);
+  }
+
+  function setThisYear() {
+    setStartDate(`${today.slice(0, 4)}-01-01`);
+    setEndDate(today);
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 className="text-lg font-bold text-[#183F35]">Order Report Export</h2>
+      <p className="mt-1 text-xs text-zinc-500">
+        Order number, date, customer name, products ordered (with weight), GST value, and final value —
+        one row per order — for your own monthly or yearly data entry.
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-end gap-4">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Start date
+          </label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            End date
+          </label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button
+          onClick={setThisMonth}
+          className="rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-zinc-600 hover:bg-gray-50"
+        >
+          This Month
+        </button>
+        <button
+          onClick={setThisYear}
+          className="rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-zinc-600 hover:bg-gray-50"
+        >
+          This Year
+        </button>
+      </div>
+
+      {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
+
+      <div className="mt-5 flex flex-wrap gap-3">
+        <button
+          onClick={() => download("xlsx")}
+          disabled={downloading !== null}
+          className="rounded-full bg-[#183F35] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#245447] disabled:opacity-50"
+        >
+          {downloading === "xlsx" ? "Preparing…" : "Download Excel"}
+        </button>
+        <button
+          onClick={() => download("pdf")}
+          disabled={downloading !== null}
+          className="rounded-full border border-[#183F35] px-5 py-2.5 text-sm font-semibold text-[#183F35] hover:bg-gold-50 disabled:opacity-50"
+        >
+          {downloading === "pdf" ? "Preparing…" : "Download PDF"}
+        </button>
+      </div>
+    </div>
   );
 }

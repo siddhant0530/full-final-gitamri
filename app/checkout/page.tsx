@@ -65,12 +65,32 @@ export default function CheckoutPage() {
     state: "",
   });
   const [stateLookup, setStateLookup] = useState<"idle" | "loading" | "done" | "error">("idle");
+
+  // Ship-to address — only collected/sent when the customer explicitly
+  // turns this on. Off (the default) means ship-to = billing address,
+  // which is what /api/orders and the invoice both assume when
+  // shippingAddress is omitted.
+  const [shipToDifferent, setShipToDifferent] = useState(false);
+  const [shipForm, setShipForm] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    pincode: "",
+    state: "",
+  });
+  const [shipStateLookup, setShipStateLookup] = useState<"idle" | "loading" | "done" | "error">("idle");
+
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "ONLINE">("COD");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   function update(field: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function updateShip(field: keyof typeof shipForm, value: string) {
+    setShipForm((f) => ({ ...f, [field]: value }));
   }
 
   // Auto-fills State (and City, only if still blank) from a 6-digit
@@ -99,6 +119,27 @@ export default function CheckoutPage() {
     }
   }
 
+  async function lookupShipPincode(pincode: string) {
+    if (!/^\d{6}$/.test(pincode)) return;
+    setShipStateLookup("loading");
+    try {
+      const res = await fetch(`/api/pincode/${pincode}`);
+      const data = await res.json();
+      if (data.state) {
+        setShipForm((f) => ({
+          ...f,
+          state: data.state,
+          city: f.city.trim() ? f.city : data.city || f.city,
+        }));
+        setShipStateLookup("done");
+      } else {
+        setShipStateLookup("error");
+      }
+    } catch {
+      setShipStateLookup("error");
+    }
+  }
+
   async function payWithRazorpay(): Promise<RazorpayPaymentInfo | null> {
     // Create a Razorpay order on the server first. The server recomputes
     // the amount from the product catalog using productId/weight/quantity
@@ -113,6 +154,7 @@ export default function CheckoutPage() {
         // never successfully reaches POST /api/orders after payment
         // (closed tab, dropped network, Supabase paused at that moment).
         customer: form,
+        shippingAddress: shipToDifferent ? shipForm : undefined,
       }),
     });
     const createData = await createRes.json();
@@ -186,6 +228,17 @@ export default function CheckoutPage() {
       setError("Please enter a valid 6-digit pincode.");
       return;
     }
+    if (
+      shipToDifferent &&
+      (!shipForm.name || !shipForm.phone || !shipForm.address || !shipForm.city || !shipForm.pincode || !shipForm.state)
+    ) {
+      setError("Please fill in all fields for the shipping address, or turn that off.");
+      return;
+    }
+    if (shipToDifferent && !/^\d{6}$/.test(shipForm.pincode)) {
+      setError("Please enter a valid 6-digit shipping pincode.");
+      return;
+    }
     if (items.length === 0) {
       setError("Your cart is empty.");
       return;
@@ -204,6 +257,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer: form,
+          shippingAddress: shipToDifferent ? shipForm : undefined,
           items: items.map((i) => ({
             productId: i.productId,
             weight: i.weight,
@@ -328,6 +382,80 @@ export default function CheckoutPage() {
               <p className="mt-1 text-xs text-green-700">Auto-filled from pincode — edit if incorrect.</p>
             )}
           </div>
+
+          <label className="flex items-center gap-2 pt-2 text-sm font-medium text-zinc-700">
+            <input
+              type="checkbox"
+              checked={shipToDifferent}
+              onChange={(e) => setShipToDifferent(e.target.checked)}
+            />
+            Ship to a different address?
+          </label>
+
+          {shipToDifferent && (
+            <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="text-sm font-semibold text-zinc-700">Shipping Address</h3>
+              <input
+                placeholder="Full Name *"
+                value={shipForm.name}
+                onChange={(e) => updateShip("name", e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3"
+              />
+              <input
+                placeholder="Phone Number *"
+                value={shipForm.phone}
+                onChange={(e) => updateShip("phone", e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3"
+              />
+              <textarea
+                placeholder="Address *"
+                value={shipForm.address}
+                onChange={(e) => updateShip("address", e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3"
+                rows={3}
+              />
+              <div className="flex gap-4">
+                <input
+                  placeholder="City *"
+                  value={shipForm.city}
+                  onChange={(e) => updateShip("city", e.target.value)}
+                  className="w-1/2 rounded-lg border border-gray-300 px-4 py-3"
+                />
+                <input
+                  placeholder="Pincode *"
+                  value={shipForm.pincode}
+                  maxLength={6}
+                  inputMode="numeric"
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    updateShip("pincode", digits);
+                    if (digits.length === 6) lookupShipPincode(digits);
+                    else setShipStateLookup("idle");
+                  }}
+                  className="w-1/2 rounded-lg border border-gray-300 px-4 py-3"
+                />
+              </div>
+              <div>
+                <input
+                  placeholder="State *"
+                  value={shipForm.state}
+                  onChange={(e) => updateShip("state", e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3"
+                />
+                {shipStateLookup === "loading" && (
+                  <p className="mt-1 text-xs text-zinc-500">Looking up state from pincode…</p>
+                )}
+                {shipStateLookup === "error" && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    Couldn&apos;t auto-detect state from that pincode — please enter it manually.
+                  </p>
+                )}
+                {shipStateLookup === "done" && (
+                  <p className="mt-1 text-xs text-green-700">Auto-filled from pincode — edit if incorrect.</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <h2 className="pt-4 text-xl font-semibold">Payment Method</h2>
           <div className="space-y-2">

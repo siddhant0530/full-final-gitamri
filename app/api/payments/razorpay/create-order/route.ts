@@ -20,17 +20,19 @@ interface CheckoutCustomer {
   state?: string;
 }
 
-// Stashes everything needed to reconstruct this order — customer details
-// and items — into the Razorpay order's notes. If the browser never
-// successfully calls POST /api/orders after a successful payment (closed
-// tab, network drop, Supabase auto-paused at that moment — the exact
-// failure mode behind a real missed order), the webhook safety net reads
-// these notes back out from the payment.captured event and self-heals.
+// Stashes everything needed to reconstruct this order — customer details,
+// items, and (if used) a separate shipping address — into the Razorpay
+// order's notes. If the browser never successfully calls POST /api/orders
+// after a successful payment (closed tab, network drop, Supabase
+// auto-paused at that moment — the exact failure mode behind a real
+// missed order), the webhook safety net reads these notes back out from
+// the payment.captured event and self-heals.
 function buildOrderNotes(
   customer: CheckoutCustomer,
-  items: { productId: string; weight?: string; quantity: number }[]
+  items: { productId: string; weight?: string; quantity: number }[],
+  shippingAddress?: CheckoutCustomer
 ): Record<string, string> {
-  return {
+  const notes: Record<string, string> = {
     customerName: truncate(customer.name || ""),
     customerEmail: truncate(customer.email || ""),
     customerPhone: truncate(customer.phone || ""),
@@ -45,11 +47,27 @@ function buildOrderNotes(
       JSON.stringify(items.map((i) => ({ p: i.productId, w: i.weight, q: i.quantity })))
     ),
   };
+
+  // Only stashed when the customer actually used a different shipping
+  // address (see the "Ship to a different address?" toggle at checkout)
+  // — omitted entirely otherwise, both to save space under Razorpay's
+  // 15-key note limit and so the webhook can tell "no separate address
+  // was given" apart from "one was given but happened to be blank".
+  if (shippingAddress) {
+    notes.shippingName = truncate(shippingAddress.name || "");
+    notes.shippingPhone = truncate(shippingAddress.phone || "");
+    notes.shippingAddress = truncate(shippingAddress.address || "");
+    notes.shippingCity = truncate(shippingAddress.city || "");
+    notes.shippingPincode = truncate(shippingAddress.pincode || "");
+    notes.shippingState = truncate(shippingAddress.state || "");
+  }
+
+  return notes;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { items: clientItems, customer } = await req.json();
+    const { items: clientItems, customer, shippingAddress } = await req.json();
 
     // The amount is never taken from the client — it's recomputed here
     // from the actual product catalog so a tampered request can't create
@@ -67,7 +85,7 @@ export async function POST(req: NextRequest) {
     // order creation should still work, it just loses the self-heal
     // safety net for that particular order (falls back to needing manual
     // recovery from the Razorpay Dashboard, same as before this existed).
-    const notes = customer ? buildOrderNotes(customer, clientItems) : undefined;
+    const notes = customer ? buildOrderNotes(customer, clientItems, shippingAddress || undefined) : undefined;
 
     const order = await createRazorpayOrder(total, `receipt_${Date.now()}`, notes);
     return NextResponse.json({ order, subtotal, discount, total });

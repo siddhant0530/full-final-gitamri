@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
 
   const {
     customer,
+    shippingAddress,
     items: clientItems,
     paymentMethod,
     razorpayOrderId,
@@ -32,6 +33,26 @@ export async function POST(req: NextRequest) {
   if (!customer?.name || !customer?.phone || !customer?.address || !customer?.state || !clientItems?.length) {
     return NextResponse.json(
       { error: "Missing required order details." },
+      { status: 400 }
+    );
+  }
+
+  // shippingAddress is optional (undefined/omitted = ship-to same as
+  // billing), but if the customer did toggle "ship to a different
+  // address" on, every field on it is required — a half-filled second
+  // address is worse than none, since it'd end up on the actual GST
+  // invoice.
+  if (
+    shippingAddress &&
+    (!shippingAddress.name ||
+      !shippingAddress.phone ||
+      !shippingAddress.address ||
+      !shippingAddress.city ||
+      !shippingAddress.pincode ||
+      !shippingAddress.state)
+  ) {
+    return NextResponse.json(
+      { error: "Please fill in all fields for the shipping address, or turn it off to ship to the billing address." },
       { status: 400 }
     );
   }
@@ -76,6 +97,7 @@ export async function POST(req: NextRequest) {
 
     const order = await saveOrder({
       customer,
+      shippingAddress: shippingAddress || undefined,
       items,
       subtotal,
       discount,

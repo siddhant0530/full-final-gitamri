@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { dbInsert, dbSelect, dbUpdate } from "@/lib/supabase";
+import { dbInsert, dbRpc, dbSelect, dbUpdate } from "@/lib/supabase";
 import { products as catalog } from "@/data/products";
 
 /**
@@ -37,9 +37,27 @@ export interface OrderItem {
 // Matches the "OrderStatus" Postgres enum exactly.
 export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 
+/**
+ * Only present when the customer used "Ship to a different address?"
+ * at checkout. undefined/missing means ship-to is the same as the
+ * billing address (order.customer) — the normal, default case.
+ */
+export interface ShippingAddress {
+  name: string;
+  phone: string;
+  address: string;
+  city: string;
+  pincode: string;
+  state?: string;
+}
+
 export interface Order {
   id: string;
   trackingId: string;
+  /** Sequential order number (1, 2, 3, ...), assigned atomically at
+   * checkout via next_order_number(). Undefined only for orders placed
+   * before this existed — the invoice falls back to trackingId for those. */
+  orderNumber?: number;
   createdAt: string;
   status: OrderStatus;
   customer: {
@@ -55,6 +73,9 @@ export interface Order {
      * the approximate fallback used on those older orders. */
     state?: string;
   };
+  /** Only set if the customer chose to ship to a different address than
+   * the one above — see the ShippingAddress doc comment. */
+  shippingAddress?: ShippingAddress;
   items: OrderItem[];
   subtotal: number;
   /** 12% prepaid discount amount — 0 for COD orders. */
@@ -80,6 +101,9 @@ function productName(productId: string): string {
 interface OrderRow {
   id: string;
   userId: string;
+  // Nullable so this keeps working against orders saved before sequential
+  // order numbers existed — see the "orderNumber" field on Order above.
+  orderNumber: number | null;
   // NOTE: "total" here is the actual amount owed/charged — i.e. subtotal
   // minus the prepaid discount (0 for COD). "discount" is nullable so
   // this keeps working against older rows saved before this column
@@ -98,6 +122,9 @@ interface OrderRow {
   // Nullable so this keeps working against orders saved before this
   // column existed — see the "state" field on Order["customer"] above.
   state: string | null;
+  // NULL means ship-to is the same as the billing address above — see
+  // the ShippingAddress doc comment.
+  shippingAddress: ShippingAddress | null;
   paymentMethod: string;
   paymentStatus: string;
   razorpayOrderId: string | null;
@@ -126,6 +153,7 @@ function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
   return {
     id: row.id,
     trackingId: row.trackingId,
+    orderNumber: row.orderNumber ?? undefined,
     createdAt: row.createdAt,
     status: row.status,
     customer: {
@@ -137,6 +165,7 @@ function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
       pincode: row.pincode,
       state: row.state ?? undefined,
     },
+    shippingAddress: row.shippingAddress ?? undefined,
     items: itemRows
       .filter((i) => i.orderId === row.id)
       .map((i) => ({
@@ -168,6 +197,25 @@ export function generateTrackingId(): string {
   return `GM-${stamp}-${rand}`;
 }
 
+/**
+ * Human-facing order number, e.g. "GM26005" for the 5th order ever
+ * placed, in 2026. The "26" is the year the order was placed (taken
+ * from createdAt, not "now" — so an order from late Dec doesn't
+ * suddenly read as next year if looked up in January), purely for the
+ * CEO's own manual data-entry convenience — so he can tell which
+ * year's batch an order belongs to at a glance. The sequence itself is
+ * global and never resets on Jan 1 — it just keeps counting up, same
+ * way invoiceNumber's sequence does.
+ *
+ * Falls back to the raw trackingId for orders placed before the
+ * orderNumber column existed (those have orderNumber === undefined).
+ */
+export function formatOrderNumber(order: Pick<Order, "orderNumber" | "trackingId" | "createdAt">): string {
+  if (order.orderNumber == null) return order.trackingId;
+  const yy = String(new Date(order.createdAt).getFullYear()).slice(-2);
+  return `GM${yy}${String(order.orderNumber).padStart(3, "0")}`;
+}
+
 export async function getOrders(): Promise<Order[]> {
   const orderRows = await dbSelect<OrderRow>("Order", "select=*&order=createdAt.desc");
   if (orderRows.length === 0) return [];
@@ -191,6 +239,28 @@ export async function getOrdersByUserId(userId: string): Promise<Order[]> {
   const orderRows = await dbSelect<OrderRow>(
     "Order",
     `select=*&userId=eq.${encodeURIComponent(userId)}&order=createdAt.desc`
+  );
+  if (orderRows.length === 0) return [];
+
+  const ids = orderRows.map((o) => o.id);
+  const itemRows = await dbSelect<OrderItemRow>(
+    "OrderItem",
+    `select=*&orderId=in.(${ids.join(",")})`
+  );
+
+  return orderRows.map((row) => toOrder(row, itemRows));
+}
+
+/**
+ * Orders placed within [startISO, endISO], inclusive, for the admin
+ * report export (lib/reports.ts). Filtered server-side via PostgREST
+ * rather than fetching everything and filtering in JS, since this can
+ * be asked for a full year's worth of orders.
+ */
+export async function getOrdersInRange(startISO: string, endISO: string): Promise<Order[]> {
+  const orderRows = await dbSelect<OrderRow>(
+    "Order",
+    `select=*&createdAt=gte.${encodeURIComponent(startISO)}&createdAt=lte.${encodeURIComponent(endISO)}&order=createdAt.asc`
   );
   if (orderRows.length === 0) return [];
 
@@ -242,6 +312,7 @@ export async function getOrderByRazorpayPaymentId(razorpayPaymentId: string): Pr
 
 interface SaveOrderInput {
   customer: Order["customer"];
+  shippingAddress?: ShippingAddress;
   items: OrderItem[];
   subtotal: number;
   discount: number;
@@ -297,11 +368,17 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
   const trackingId = generateTrackingId();
   const orderId = randomUUID();
   const paymentStatus = input.paymentMethod === "ONLINE" && input.razorpayPaymentId ? "Paid" : "Pending";
+  // Assigned here, at the moment the order is actually placed, so the
+  // number reflects true chronological order — not deferred to whenever
+  // an invoice happens to get downloaded later (see invoiceNumber, which
+  // deliberately does that instead, for different reasons).
+  const orderNumber = await dbRpc<number>("next_order_number");
 
   const [orderRow] = await dbInsert<OrderRow>("Order", [
     {
       id: orderId,
       userId: guestUserId,
+      orderNumber,
       total: input.total,
       discount: input.discount,
       status: "PENDING",
@@ -314,6 +391,7 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
       city: input.customer.city,
       pincode: input.customer.pincode,
       state: input.customer.state || null,
+      shippingAddress: input.shippingAddress || null,
       paymentMethod: input.paymentMethod,
       paymentStatus,
       razorpayOrderId: input.razorpayOrderId || null,
