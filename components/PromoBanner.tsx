@@ -42,7 +42,7 @@ function OfferRow() {
         />
         <span>
           Pickle Trial Pack at{" "}
-          <span className="font-semibold text-gold-300">₹399</span>
+          <span className="font-semibold text-gold-300">₹449</span>
         </span>
       </span>
 
