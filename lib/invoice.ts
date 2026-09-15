@@ -664,6 +664,7 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     // tax is added back in below via the OUTPUT CGST/SGST/IGST rows,
     // matching how the reference Tally invoice presents it.
     text(rupees(gst.taxableValuePaise), col.amount, y, { size: 8, align: "right", maxWidth: col.amountW - 4 });
+    hLine(MARGIN, RIGHT_EDGE, y - 4);
   });
 
   const itemRowsBottom = y - 4;
