@@ -27,8 +27,8 @@ const PICKUP_LOCATION = process.env.DELHIVERY_PICKUP_LOCATION;
  * approximation. Revisit if mixed-size orders need more precise handling.
  */
 const JAR_DIMENSIONS_CM: Record<string, { length: number; width: number; height: number }> = {
-  "220g": { length: 7.5, width: 7.5, height: 9 },
-  "500g": { length: 8.5, width: 8.5, height: 11 },
+  "220g": { length: 9, width: 9, height: 11 },
+  "500g": { length: 11, width: 11, height: 13 },
 };
 const DEFAULT_JAR_DIMENSIONS = JAR_DIMENSIONS_CM["220g"];
 
