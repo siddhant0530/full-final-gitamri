@@ -460,7 +460,7 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   // sequential number — see formatOrderNumber() in lib/order-store.ts.
   const metaRows: [string, string, string, string][] = [
     ["Invoice No.", invoiceNumber, "Dated", formatInvoiceDate(invoiceDate)],
-    ["Order No.", formatOrderNumber(order), "Mode/Terms of Payment", order.paymentMethod === "ONLINE" ? "Prepaid(PG)" : "Cash on Delivery"],
+    ["Order No.", formatOrderNumber(order), "Mode/Terms of Payment", order.paymentMethod === "ONLINE" ? "Prepaid(PG)" : order.paymentMethod === "FREE" ? "Complimentary" : "Cash on Delivery"],
   ];
   metaRows.forEach((row, i) => {
     const rowTop = headerTop - i * rowAFieldH;
@@ -626,7 +626,8 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     // the invoice can never drift from what the customer actually paid.
     // "Rate" below still shows the full list price (standard invoice
     // convention — MRP in Rate, reduction in Disc. %, net amount in Amount).
-    const discountRate = order.paymentMethod === "ONLINE" ? prepaidDiscountRateForWeight(item.weight) : 0;
+    const discountRate =
+      order.paymentMethod === "FREE" ? 1 : order.paymentMethod === "ONLINE" ? prepaidDiscountRateForWeight(item.weight) : 0;
     // Rounded to whole rupees, in that order — exactly mirroring
     // calculateOrderTotal() in pricing.ts, which is what actually
     // determined order.total at checkout. Rounding in paise here instead
@@ -664,7 +665,6 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
     // tax is added back in below via the OUTPUT CGST/SGST/IGST rows,
     // matching how the reference Tally invoice presents it.
     text(rupees(gst.taxableValuePaise), col.amount, y, { size: 8, align: "right", maxWidth: col.amountW - 4 });
-    hLine(MARGIN, RIGHT_EDGE, y - 4);
   });
 
   const itemRowsBottom = y - 4;

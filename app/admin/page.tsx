@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatPrice } from "@/lib/formatPrice";
 import { stateFromPincode } from "@/lib/pincode-state";
+import { products as catalog } from "@/data/products";
 import type { Order, OrderStatus } from "@/lib/order-store";
 import type { Review, ReviewStatus } from "@/lib/reviews-store";
 
@@ -27,6 +28,48 @@ export default function AdminPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewLinks, setReviewLinks] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  // Free/complimentary orders (e.g. jars sent to influencers for reels) —
+  // created via /api/admin/orders/free, no Razorpay involved. See that
+  // route and lib/order-store.ts's paymentMethod: "FREE".
+  const sellableProducts = useMemo(() => catalog.filter((p) => !p.comingSoon && p.inStock), []);
+  const [showFreeOrderForm, setShowFreeOrderForm] = useState(false);
+  const [freeOrderSubmitting, setFreeOrderSubmitting] = useState(false);
+  const [freeOrderError, setFreeOrderError] = useState("");
+  const [freeOrderCustomer, setFreeOrderCustomer] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    pincode: "",
+    state: "",
+  });
+  const [freeOrderItems, setFreeOrderItems] = useState<
+    { productId: string; weight: string; quantity: number }[]
+  >([{ productId: "", weight: "", quantity: 1 }]);
+
+  function weightOptionsFor(productId: string): string[] {
+    const product = sellableProducts.find((p) => p.id === productId);
+    if (!product) return [];
+    if (product.variants && product.variants.length > 0) return product.variants.map((v) => v.weight);
+    return product.weight ? [product.weight] : [];
+  }
+
+  function updateFreeOrderItem(
+    index: number,
+    patch: Partial<{ productId: string; weight: string; quantity: number }>
+  ) {
+    setFreeOrderItems((rows) => rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  }
+
+  function addFreeOrderItemRow() {
+    setFreeOrderItems((rows) => [...rows, { productId: "", weight: "", quantity: 1 }]);
+  }
+
+  function removeFreeOrderItemRow(index: number) {
+    setFreeOrderItems((rows) => rows.filter((_, i) => i !== index));
+  }
 
   useEffect(() => {
     loadOrders();
@@ -131,6 +174,43 @@ export default function AdminPage() {
     loadOrders();
   }
 
+  async function submitFreeOrder() {
+    setFreeOrderError("");
+    const { name, phone, address, city, pincode, state } = freeOrderCustomer;
+    if (!name || !phone || !address || !city || !pincode || !state) {
+      setFreeOrderError("Please fill in all customer/address fields.");
+      return;
+    }
+    if (freeOrderItems.length === 0 || freeOrderItems.some((i) => !i.productId || !i.weight)) {
+      setFreeOrderError("Please pick a product and jar size for every item.");
+      return;
+    }
+
+    setFreeOrderSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/orders/free", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customer: freeOrderCustomer, items: freeOrderItems }),
+      });
+      if (res.status === 401) {
+        setStatus("unauthed");
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setFreeOrderError(data.error || "Could not place free order.");
+        return;
+      }
+      setShowFreeOrderForm(false);
+      setFreeOrderCustomer({ name: "", email: "", phone: "", address: "", city: "", pincode: "", state: "" });
+      setFreeOrderItems([{ productId: "", weight: "", quantity: 1 }]);
+      loadOrders();
+    } finally {
+      setFreeOrderSubmitting(false);
+    }
+  }
+
   async function setReviewStatusAdmin(id: string, newStatus: ReviewStatus) {
     const res = await fetch(`/api/admin/reviews/${id}`, {
       method: "PATCH",
@@ -192,11 +272,13 @@ export default function AdminPage() {
     const byYear = new Map<number, { orders: number; revenue: number }>();
     let codCount = 0;
     let onlineCount = 0;
+    let freeCount = 0;
     let totalRevenue = 0;
 
     for (const order of orders) {
       totalRevenue += order.total;
       if (order.paymentMethod === "COD") codCount++;
+      else if (order.paymentMethod === "FREE") freeCount++;
       else onlineCount++;
 
       // Prefer the exact state captured at checkout; only fall back to the
@@ -259,6 +341,7 @@ export default function AdminPage() {
       totalRevenue,
       codCount,
       onlineCount,
+      freeCount,
       currentYear,
       yearToDate,
       byState: sortDesc(
@@ -395,6 +478,133 @@ export default function AdminPage() {
 
       {tab === "orders" && (
         <>
+          <div className="mb-4">
+            <button
+              onClick={() => setShowFreeOrderForm((v) => !v)}
+              className="rounded-full border border-[#183F35] px-4 py-1.5 text-sm font-semibold text-[#183F35] hover:bg-[#183F35]/5"
+            >
+              {showFreeOrderForm ? "Cancel" : "+ Send Free Sample"}
+            </button>
+          </div>
+
+          {showFreeOrderForm && (
+            <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h3 className="mb-1 font-bold">Send a Free Sample (e.g. for a reel)</h3>
+              <p className="mb-4 text-sm text-zinc-500">
+                Creates a real order at ₹0 — no Razorpay involved. It gets a normal GST invoice
+                and can be shipped via Delhivery exactly like any other order.
+              </p>
+
+              {freeOrderError && <p className="mb-3 text-sm text-red-600">{freeOrderError}</p>}
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  placeholder="Name"
+                  value={freeOrderCustomer.name}
+                  onChange={(e) => setFreeOrderCustomer((c) => ({ ...c, name: e.target.value }))}
+                  className="rounded-lg border border-gray-300 px-3 py-2"
+                />
+                <input
+                  placeholder="Phone"
+                  value={freeOrderCustomer.phone}
+                  onChange={(e) => setFreeOrderCustomer((c) => ({ ...c, phone: e.target.value }))}
+                  className="rounded-lg border border-gray-300 px-3 py-2"
+                />
+                <input
+                  placeholder="Email (optional)"
+                  value={freeOrderCustomer.email}
+                  onChange={(e) => setFreeOrderCustomer((c) => ({ ...c, email: e.target.value }))}
+                  className="rounded-lg border border-gray-300 px-3 py-2 sm:col-span-2"
+                />
+                <input
+                  placeholder="Address"
+                  value={freeOrderCustomer.address}
+                  onChange={(e) => setFreeOrderCustomer((c) => ({ ...c, address: e.target.value }))}
+                  className="rounded-lg border border-gray-300 px-3 py-2 sm:col-span-2"
+                />
+                <input
+                  placeholder="City"
+                  value={freeOrderCustomer.city}
+                  onChange={(e) => setFreeOrderCustomer((c) => ({ ...c, city: e.target.value }))}
+                  className="rounded-lg border border-gray-300 px-3 py-2"
+                />
+                <input
+                  placeholder="Pincode"
+                  value={freeOrderCustomer.pincode}
+                  onChange={(e) => setFreeOrderCustomer((c) => ({ ...c, pincode: e.target.value }))}
+                  className="rounded-lg border border-gray-300 px-3 py-2"
+                />
+                <input
+                  placeholder="State"
+                  value={freeOrderCustomer.state}
+                  onChange={(e) => setFreeOrderCustomer((c) => ({ ...c, state: e.target.value }))}
+                  className="rounded-lg border border-gray-300 px-3 py-2 sm:col-span-2"
+                />
+              </div>
+
+              <div className="mt-4 space-y-2">
+                {freeOrderItems.map((item, idx) => (
+                  <div key={idx} className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={item.productId}
+                      onChange={(e) => updateFreeOrderItem(idx, { productId: e.target.value, weight: "" })}
+                      className="rounded-lg border border-gray-300 px-3 py-2"
+                    >
+                      <option value="">Select product...</option>
+                      {sellableProducts.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={item.weight}
+                      onChange={(e) => updateFreeOrderItem(idx, { weight: e.target.value })}
+                      className="rounded-lg border border-gray-300 px-3 py-2"
+                      disabled={!item.productId}
+                    >
+                      <option value="">Size...</option>
+                      {weightOptionsFor(item.productId).map((w) => (
+                        <option key={w} value={w}>
+                          {w}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.quantity}
+                      onChange={(e) => updateFreeOrderItem(idx, { quantity: Number(e.target.value) || 1 })}
+                      className="w-20 rounded-lg border border-gray-300 px-3 py-2"
+                    />
+                    {freeOrderItems.length > 1 && (
+                      <button
+                        onClick={() => removeFreeOrderItemRow(idx)}
+                        className="text-sm text-red-600 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={addFreeOrderItemRow}
+                  className="text-sm font-semibold text-[#183F35] hover:underline"
+                >
+                  + Add another item
+                </button>
+              </div>
+
+              <button
+                onClick={submitFreeOrder}
+                disabled={freeOrderSubmitting}
+                className="mt-4 rounded-full bg-[#183F35] px-5 py-2 text-sm font-semibold text-white hover:bg-[#0c2718] disabled:opacity-50"
+              >
+                {freeOrderSubmitting ? "Placing..." : "Place Free Order"}
+              </button>
+            </div>
+          )}
+
           {loading && <p>Loading orders...</p>}
           {!loading && orders.length === 0 && <p>No orders yet.</p>}
 
@@ -484,7 +694,7 @@ export default function AdminPage() {
                     </div>
                     {order.discount > 0 && (
                       <div className="flex justify-between text-green-700">
-                        <span>Prepaid Discount</span>
+                        <span>{order.paymentMethod === "FREE" ? "Complimentary Discount" : "Prepaid Discount"}</span>
                         <span>-{formatPrice(order.discount)}</span>
                       </div>
                     )}
@@ -493,7 +703,12 @@ export default function AdminPage() {
                       <span>{formatPrice(order.total)}</span>
                     </div>
                     <p className="mt-1 text-zinc-500">
-                      {order.paymentMethod === "COD" ? "Cash on Delivery" : "Online Payment"} ·{" "}
+                      {order.paymentMethod === "COD"
+                        ? "Cash on Delivery"
+                        : order.paymentMethod === "FREE"
+                        ? "Complimentary (Free Sample)"
+                        : "Online Payment"}{" "}
+                      ·{" "}
                       {order.paymentStatus}
                     </p>
 
@@ -641,7 +856,7 @@ export default function AdminPage() {
           ) : (
             <>
               {/* Summary cards */}
-              <div className="grid gap-4 sm:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-5">
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Total Orders</p>
                   <p className="mt-1 text-2xl font-bold text-[#183F35]">{analytics.totalOrders}</p>
@@ -657,6 +872,10 @@ export default function AdminPage() {
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Cash on Delivery</p>
                   <p className="mt-1 text-2xl font-bold text-[#183F35]">{analytics.codCount}</p>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Free Samples</p>
+                  <p className="mt-1 text-2xl font-bold text-[#183F35]">{analytics.freeCount}</p>
                 </div>
               </div>
 

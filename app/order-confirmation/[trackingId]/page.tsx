@@ -68,13 +68,24 @@ export default async function OrderConfirmationPage({
             <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
           </div>
         ))}
+        {order.discount > 0 && (
+          <div className="flex justify-between py-1 text-sm text-green-700">
+            <span>Discount</span>
+            <span>-{formatPrice(order.discount)}</span>
+          </div>
+        )}
         <div className="mt-3 flex justify-between border-t border-gray-200 pt-3 font-bold">
           <span>Total</span>
-          <span>{formatPrice(order.subtotal)}</span>
+          <span>{formatPrice(order.total)}</span>
         </div>
         <p className="mt-3 text-sm text-zinc-500">
-          Payment method: {order.paymentMethod === "COD" ? "Cash on Delivery" : "Online Payment"} ·
-          Status: {order.status}
+          Payment method:{" "}
+          {order.paymentMethod === "COD"
+            ? "Cash on Delivery"
+            : order.paymentMethod === "FREE"
+            ? "Complimentary"
+            : "Online Payment"}{" "}
+          · Status: {order.status}
         </p>
         {order.delhiveryTrackingUrl && (
           <p className="mt-2 text-sm">

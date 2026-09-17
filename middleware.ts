@@ -10,7 +10,8 @@ import { isValidAdminSessionToken, ADMIN_SESSION_COOKIE } from "@/lib/admin-auth
  * 1. Admin API protection — GET /api/orders (list all customer orders),
  *    PATCH /api/orders/:id (change order status), POST
  *    /api/delivery/create (create a shipment), everything under
- *    /api/admin/reviews (moderate customer reviews), /api/admin/invoice
+ *    /api/admin/orders (create complimentary/FREE orders for influencer
+ *    samples), /api/admin/reviews (moderate customer reviews), /api/admin/invoice
  *    (generate a GST invoice PDF), and /api/admin/reports (monthly/yearly
  *    order export) all expose or act on customer/order data. Previously these had NO server-side check
  *    at all — the "admin password" only gated the /admin page's UI, so
@@ -67,6 +68,7 @@ export async function middleware(req: NextRequest) {
     (pathname === "/api/orders" && req.method === "GET") ||
     (/^\/api\/orders\/[^/]+$/.test(pathname) && req.method === "PATCH") ||
     (pathname === "/api/delivery/create" && req.method === "POST") ||
+    pathname.startsWith("/api/admin/orders") ||
     pathname.startsWith("/api/admin/reviews") ||
     pathname.startsWith("/api/admin/invoice") ||
     pathname.startsWith("/api/admin/reports");

@@ -82,7 +82,12 @@ export interface Order {
   discount: number;
   /** Actual amount owed/charged: subtotal - discount. */
   total: number;
-  paymentMethod: "COD" | "ONLINE";
+  /** "FREE" = a complimentary order created from the admin panel (e.g.
+   * a jar sent to an influencer for a reel) — no Razorpay payment ever
+   * happens for these; total is always 0 and paymentStatus is always
+   * "Paid" (nothing is owed). Everything else (invoice, Delhivery
+   * shipment) treats it exactly like a real order. */
+  paymentMethod: "COD" | "ONLINE" | "FREE";
   paymentStatus: "Pending" | "Paid";
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
@@ -180,7 +185,8 @@ function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
     subtotal: row.total + (row.discount ?? 0),
     discount: row.discount ?? 0,
     total: row.total,
-    paymentMethod: row.paymentMethod === "ONLINE" ? "ONLINE" : "COD",
+    paymentMethod:
+      row.paymentMethod === "ONLINE" ? "ONLINE" : row.paymentMethod === "FREE" ? "FREE" : "COD",
     paymentStatus: row.paymentStatus === "Paid" ? "Paid" : "Pending",
     razorpayOrderId: row.razorpayOrderId ?? undefined,
     razorpayPaymentId: row.razorpayPaymentId ?? undefined,
@@ -317,7 +323,7 @@ interface SaveOrderInput {
   subtotal: number;
   discount: number;
   total: number;
-  paymentMethod: "COD" | "ONLINE";
+  paymentMethod: "COD" | "ONLINE" | "FREE";
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
 }
@@ -367,7 +373,10 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
 
   const trackingId = generateTrackingId();
   const orderId = randomUUID();
-  const paymentStatus = input.paymentMethod === "ONLINE" && input.razorpayPaymentId ? "Paid" : "Pending";
+  const paymentStatus =
+    input.paymentMethod === "FREE" || (input.paymentMethod === "ONLINE" && input.razorpayPaymentId)
+      ? "Paid"
+      : "Pending";
   // Assigned here, at the moment the order is actually placed, so the
   // number reflects true chronological order — not deferred to whenever
   // an invoice happens to get downloaded later (see invoiceNumber, which

@@ -46,7 +46,8 @@ function orderToReportRow(order: Order): ReportRow {
   const productParts: string[] = [];
 
   for (const item of order.items) {
-    const discountRate = order.paymentMethod === "ONLINE" ? prepaidDiscountRateForWeight(item.weight) : 0;
+    const discountRate =
+      order.paymentMethod === "FREE" ? 1 : order.paymentMethod === "ONLINE" ? prepaidDiscountRateForWeight(item.weight) : 0;
     const lineListInclusive = item.price * item.quantity;
     const lineDiscountPaise = Math.round(lineListInclusive * discountRate) * 100;
     const lineNetInclusive = lineListInclusive - lineDiscountPaise / 100;
