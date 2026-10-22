@@ -92,10 +92,11 @@ function financialYearParts(date: Date): { start: string; end: string } {
 }
 
 function formatInvoiceDate(date: Date): string {
-  const day = date.getDate().toString().padStart(2, "0");
-  const month = date.toLocaleDateString("en-IN", { month: "short" });
-  const year = (date.getFullYear() % 100).toString().padStart(2, "0");
-  return `${day}-${month}-${year}`;
+  // Server runs in UTC — pin to IST so an invoice made at 1 AM IST isn't dated the previous day.
+  // Fixed month names (some runtimes print "Sept"); matches Tally's "22-Oct-26" style.
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const [y, m, d] = date.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).split("-");
+  return `${d}-${MONTHS[Number(m) - 1]}-${y.slice(-2)}`;
 }
 
 export interface LineGst {
@@ -260,7 +261,9 @@ function sanitizeForPdf(str: string): string {
 
 export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   const invoiceNumber = await getOrCreateInvoiceNumber(order);
-  const invoiceDate = new Date();
+  // Re-downloads keep the date the invoice was first issued — previously
+  // every re-download was stamped with today's date.
+  const invoiceDate = order.invoiceGeneratedAt ? new Date(order.invoiceGeneratedAt) : new Date();
 
   // Ship-to falls back to the billing address when the customer didn't
   // use the "ship to a different address" option at checkout (the
@@ -676,6 +679,8 @@ export async function generateInvoicePdf(order: Order): Promise<Uint8Array> {
   vLine(col.qty - 2, tableTop, itemRowsBottom);
   vLine(col.rate - 2, tableTop, itemRowsBottom);
   vLine(col.disc - 2, tableTop, itemRowsBottom);
+  // Closing line under the last item row, so the column dividers end on a border.
+  hLine(MARGIN, RIGHT_EDGE, itemRowsBottom);
 
   const summaryLabelMaxWidth = col.amount - 6 - col.desc;
   y -= 18;

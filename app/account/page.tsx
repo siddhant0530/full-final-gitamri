@@ -66,6 +66,7 @@ export default async function AccountPage() {
               </div>
               <p className="mt-1 text-sm text-zinc-500">
                 {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                  timeZone: "Asia/Kolkata",
                   day: "numeric",
                   month: "short",
                   year: "numeric",

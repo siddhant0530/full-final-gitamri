@@ -22,7 +22,7 @@ export default function AdminPage() {
   const [status, setStatus] = useState<"checking" | "authed" | "unauthed">("checking");
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [tab, setTab] = useState<"orders" | "reviews" | "analytics" | "reports">("orders");
+  const [tab, setTab] = useState<"orders" | "complimentary" | "reviews" | "analytics" | "reports">("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState<OrderStatus | "ALL">("ALL");
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -275,10 +275,17 @@ export default function AdminPage() {
     let freeCount = 0;
     let totalRevenue = 0;
 
+    let salesOrderCount = 0;
     for (const order of orders) {
+      // Complimentary (FREE) orders are not sales — count them, but keep
+      // them out of every revenue / product / location figure below.
+      if (order.paymentMethod === "FREE" || order.total === 0) {
+        freeCount++;
+        continue;
+      }
+      salesOrderCount++;
       totalRevenue += order.total;
       if (order.paymentMethod === "COD") codCount++;
-      else if (order.paymentMethod === "FREE") freeCount++;
       else onlineCount++;
 
       // Prefer the exact state captured at checkout; only fall back to the
@@ -337,7 +344,7 @@ export default function AdminPage() {
     const yearToDate = byYear.get(currentYear) ?? { orders: 0, revenue: 0 };
 
     return {
-      totalOrders: orders.length,
+      totalOrders: salesOrderCount,
       totalRevenue,
       codCount,
       onlineCount,
@@ -371,6 +378,13 @@ export default function AdminPage() {
   // Counts per status (from the full unfiltered list) so the filter
   // buttons can show how many orders are in each bucket, and the filtered
   // list actually shown in the Orders tab.
+  // Orders tab = real sales only; Complimentary tab = FREE orders only.
+  // Rule: every ₹0 order is complimentary, whatever its payment method.
+  const isComplimentary = (o: Order) => o.paymentMethod === "FREE" || o.total === 0;
+  const salesOrders = useMemo(() => orders.filter((o) => !isComplimentary(o)), [orders]);
+  const complimentaryOrders = useMemo(() => orders.filter(isComplimentary), [orders]);
+  const tabOrders = tab === "complimentary" ? complimentaryOrders : salesOrders;
+
   const orderStatusCounts = useMemo(() => {
     const counts: Record<OrderStatus, number> = {
       PENDING: 0,
@@ -379,13 +393,13 @@ export default function AdminPage() {
       DELIVERED: 0,
       CANCELLED: 0,
     };
-    for (const order of orders) counts[order.status]++;
+    for (const order of tabOrders) counts[order.status]++;
     return counts;
-  }, [orders]);
+  }, [tabOrders]);
 
   const filteredOrders = useMemo(
-    () => (orderStatusFilter === "ALL" ? orders : orders.filter((o) => o.status === orderStatusFilter)),
-    [orders, orderStatusFilter]
+    () => (orderStatusFilter === "ALL" ? tabOrders : tabOrders.filter((o) => o.status === orderStatusFilter)),
+    [tabOrders, orderStatusFilter]
   );
 
   if (status === "checking") {
@@ -442,7 +456,17 @@ export default function AdminPage() {
               : "text-zinc-500 hover:text-zinc-800"
           }`}
         >
-          Orders
+          Orders ({salesOrders.length})
+        </button>
+        <button
+          onClick={() => setTab("complimentary")}
+          className={`px-4 py-2 text-sm font-semibold ${
+            tab === "complimentary"
+              ? "border-b-2 border-[#183F35] text-[#183F35]"
+              : "text-zinc-500 hover:text-zinc-800"
+          }`}
+        >
+          Complimentary ({complimentaryOrders.length})
         </button>
         <button
           onClick={() => setTab("reviews")}
@@ -476,18 +500,24 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {tab === "orders" && (
+      {(tab === "orders" || tab === "complimentary") && (
         <>
-          <div className="mb-4">
-            <button
-              onClick={() => setShowFreeOrderForm((v) => !v)}
-              className="rounded-full border border-[#183F35] px-4 py-1.5 text-sm font-semibold text-[#183F35] hover:bg-[#183F35]/5"
-            >
-              {showFreeOrderForm ? "Cancel" : "+ Send Free Sample"}
-            </button>
-          </div>
+          {tab === "complimentary" && (
+            <div className="mb-4">
+              <p className="mb-3 text-sm text-zinc-500">
+                Free samples / complimentary orders (₹0). Kept separate from sales, analytics and the
+                sales report.
+              </p>
+              <button
+                onClick={() => setShowFreeOrderForm((v) => !v)}
+                className="rounded-full border border-[#183F35] px-4 py-1.5 text-sm font-semibold text-[#183F35] hover:bg-[#183F35]/5"
+              >
+                {showFreeOrderForm ? "Cancel" : "+ Send Free Sample"}
+              </button>
+            </div>
+          )}
 
-          {showFreeOrderForm && (
+          {tab === "complimentary" && showFreeOrderForm && (
             <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="mb-1 font-bold">Send a Free Sample (e.g. for a reel)</h3>
               <p className="mb-4 text-sm text-zinc-500">
@@ -606,12 +636,14 @@ export default function AdminPage() {
           )}
 
           {loading && <p>Loading orders...</p>}
-          {!loading && orders.length === 0 && <p>No orders yet.</p>}
+          {!loading && tabOrders.length === 0 && (
+            <p>{tab === "complimentary" ? "No complimentary orders yet." : "No orders yet."}</p>
+          )}
 
-          {orders.length > 0 && (
+          {tabOrders.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
               {(["ALL", "PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as const).map((s) => {
-                const count = s === "ALL" ? orders.length : orderStatusCounts[s];
+                const count = s === "ALL" ? tabOrders.length : orderStatusCounts[s];
                 const active = orderStatusFilter === s;
                 return (
                   <button
@@ -630,7 +662,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {!loading && orders.length > 0 && filteredOrders.length === 0 && (
+          {!loading && tabOrders.length > 0 && filteredOrders.length === 0 && (
             <p className="text-zinc-500">No orders with this status.</p>
           )}
 
@@ -653,7 +685,15 @@ export default function AdminPage() {
                       </button>
                     </div>
                     <p className="text-sm text-zinc-500">
-                      {new Date(order.createdAt).toLocaleString()}
+                      {new Date(order.createdAt).toLocaleString("en-IN", {
+                        timeZone: "Asia/Kolkata",
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
                     </p>
                   </div>
                   <select
@@ -858,7 +898,7 @@ export default function AdminPage() {
               {/* Summary cards */}
               <div className="grid gap-4 sm:grid-cols-5">
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Total Orders</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Sales Orders</p>
                   <p className="mt-1 text-2xl font-bold text-[#183F35]">{analytics.totalOrders}</p>
                 </div>
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -1038,7 +1078,12 @@ export default function AdminPage() {
         </div>
       )}
 
-      {tab === "reports" && <ReportsPanel />}
+      {tab === "reports" && (
+        <div className="space-y-6">
+          <ReportsPanel />
+          <InvoiceDownloadPanel orders={orders} />
+        </div>
+      )}
     </main>
   );
 }
@@ -1057,6 +1102,7 @@ function ReportsPanel() {
   const [startDate, setStartDate] = useState(firstOfMonth);
   const [endDate, setEndDate] = useState(today);
   const [downloading, setDownloading] = useState<"xlsx" | "pdf" | null>(null);
+  const [reportKind, setReportKind] = useState<"sales" | "complimentary">("sales");
   const [error, setError] = useState("");
 
   async function download(format: "xlsx" | "pdf") {
@@ -1071,7 +1117,9 @@ function ReportsPanel() {
     }
     setDownloading(format);
     try {
-      const res = await fetch(`/api/admin/reports?start=${startDate}&end=${endDate}&format=${format}`);
+      const res = await fetch(
+        `/api/admin/reports?start=${startDate}&end=${endDate}&format=${format}&type=${reportKind}`
+      );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Could not generate report.");
@@ -1080,7 +1128,7 @@ function ReportsPanel() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Gitamri-Orders-${startDate}_to_${endDate}.${format}`;
+      a.download = `Gitamri-${reportKind === "complimentary" ? "Complimentary" : "Sales"}-${startDate}_to_${endDate}.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1108,6 +1156,27 @@ function ReportsPanel() {
       <p className="mt-1 text-xs text-zinc-500">
         Order number, date, customer name, products ordered (with weight), GST value, and final value —
         one row per order — for your own monthly or yearly data entry.
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {(["sales", "complimentary"] as const).map((k) => (
+          <button
+            key={k}
+            onClick={() => setReportKind(k)}
+            className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+              reportKind === k
+                ? "bg-[#183F35] text-white"
+                : "border border-gray-300 text-zinc-600 hover:bg-gray-50"
+            }`}
+          >
+            {k === "sales" ? "Sales" : "Complimentary"}
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-zinc-500">
+        {reportKind === "sales"
+          ? "Real sales only (COD + online). Complimentary orders are excluded."
+          : "Complimentary / free-sample orders only, with the value of goods given away."}
       </p>
 
       <div className="mt-4 flex flex-wrap items-end gap-4">
@@ -1165,6 +1234,172 @@ function ReportsPanel() {
           {downloading === "pdf" ? "Preparing…" : "Download PDF"}
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Bulk invoice download — month-wise or all at once, as one .zip.
+ *
+ * Only orders that ALREADY have an invoice number are included, so this
+ * never creates new GEWEB numbers. Orders without one are listed in
+ * NOT-INVOICED.txt inside the zip instead.
+ *
+ * Month = the invoice's own date (when it was first issued), in IST —
+ * the same date printed on the PDF, which is what GST filing goes by.
+ *
+ * Invoices are fetched one by one in the browser and zipped here, so no
+ * single server request has to build a large file.
+ */
+function istDateKey(iso: string): string {
+  // "YYYY-MM-DD" in IST
+  return new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+}
+
+function InvoiceDownloadPanel({ orders }: { orders: Order[] }) {
+  const thisMonth = istDateKey(new Date().toISOString()).slice(0, 7);
+  const [month, setMonth] = useState(thisMonth);
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState("");
+  const [error, setError] = useState("");
+
+  const isComp = (o: Order) => o.paymentMethod === "FREE" || o.total === 0;
+  const invoiced = useMemo(() => orders.filter((o) => o.invoiceNumber), [orders]);
+  const invoiceMonthKey = (o: Order) => istDateKey(o.invoiceGeneratedAt || o.createdAt).slice(0, 7);
+  const monthInvoiced = useMemo(
+    () => invoiced.filter((o) => invoiceMonthKey(o) === month),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [invoiced, month]
+  );
+  const monthNotInvoiced = useMemo(
+    () => orders.filter((o) => !o.invoiceNumber && istDateKey(o.createdAt).slice(0, 7) === month),
+    [orders, month]
+  );
+  const allNotInvoiced = useMemo(() => orders.filter((o) => !o.invoiceNumber), [orders]);
+
+  function folderFor(o: Order): string {
+    if (o.status === "CANCELLED") return "Cancelled";
+    return isComp(o) ? "Complimentary" : "Sales";
+  }
+
+  function safeName(s: string): string {
+    return s.trim().replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "Customer";
+  }
+
+  async function download(scope: "month" | "all") {
+    setError("");
+    const list = scope === "month" ? monthInvoiced : invoiced;
+    const notInvoiced = scope === "month" ? monthNotInvoiced : allNotInvoiced;
+    if (list.length === 0) {
+      setError(scope === "month" ? "No invoices issued in this month." : "No invoices issued yet.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const { buildZip } = await import("@/lib/zip");
+      const sorted = [...list].sort((a, b) => (a.invoiceNumber! < b.invoiceNumber! ? -1 : 1));
+      const entries: { name: string; data: Uint8Array }[] = [];
+      const failed: string[] = [];
+
+      for (let i = 0; i < sorted.length; i++) {
+        const o = sorted[i];
+        setProgress(`Fetching ${i + 1} of ${sorted.length}…`);
+        try {
+          const res = await fetch(`/api/admin/invoice/${encodeURIComponent(o.trackingId)}`);
+          if (!res.ok) throw new Error(String(res.status));
+          const data = new Uint8Array(await res.arrayBuffer());
+          entries.push({
+            name: `${folderFor(o)}/${o.invoiceNumber}_${safeName(o.customer.name)}.pdf`,
+            data,
+          });
+        } catch {
+          failed.push(`${o.invoiceNumber} (${o.trackingId})`);
+        }
+      }
+
+      const lines: string[] = [];
+      if (notInvoiced.length > 0) {
+        lines.push("Orders WITHOUT an invoice number (not included in this zip):", "");
+        for (const o of notInvoiced) {
+          lines.push(
+            `${istDateKey(o.createdAt)}  ${o.trackingId}  ${o.customer.name.trim()}  Rs.${o.total}  ${o.paymentMethod}  ${o.status}`
+          );
+        }
+      }
+      if (failed.length > 0) {
+        lines.push("", "Invoices that FAILED to download (try again):", ...failed);
+      }
+      if (lines.length > 0) {
+        entries.push({ name: "NOT-INVOICED.txt", data: new TextEncoder().encode(lines.join("\r\n")) });
+      }
+
+      setProgress("Building zip…");
+      const zipBytes = buildZip(entries);
+      const blob = new Blob([zipBytes as BlobPart], { type: "application/zip" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = scope === "month" ? `Gitamri-Invoices-${month}.zip` : `Gitamri-Invoices-All.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      setProgress(
+        failed.length > 0
+          ? `Done — ${entries.length - (lines.length > 0 ? 1 : 0)} invoices, ${failed.length} failed (listed in NOT-INVOICED.txt).`
+          : `Done — ${sorted.length} invoices downloaded.`
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not build the zip.");
+      setProgress("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 className="text-lg font-bold text-[#183F35]">Download Invoices</h2>
+      <p className="mt-1 text-xs text-zinc-500">
+        All issued GST invoices as one .zip, sorted into Sales / Complimentary / Cancelled folders. Month
+        is by invoice date. Orders that don&apos;t have an invoice number yet are listed in
+        NOT-INVOICED.txt — no new invoice numbers are created.
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-end gap-4">
+        <div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-zinc-500">Month</label>
+          <input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="mt-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button
+          onClick={() => download("month")}
+          disabled={busy}
+          className="rounded-full bg-[#183F35] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#245447] disabled:opacity-50"
+        >
+          Download Month ({monthInvoiced.length})
+        </button>
+        <button
+          onClick={() => download("all")}
+          disabled={busy}
+          className="rounded-full border border-[#183F35] px-5 py-2.5 text-sm font-semibold text-[#183F35] hover:bg-gold-50 disabled:opacity-50"
+        >
+          Download All ({invoiced.length})
+        </button>
+      </div>
+
+      <p className="mt-3 text-xs text-zinc-500">
+        {monthNotInvoiced.length > 0 &&
+          `${monthNotInvoiced.length} order(s) placed in this month have no invoice number yet. `}
+      </p>
+      {progress && <p className="mt-2 text-sm font-semibold text-[#183F35]">{progress}</p>}
+      {error && <p className="mt-2 text-sm font-semibold text-red-600">{error}</p>}
     </div>
   );
 }

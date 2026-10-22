@@ -154,12 +154,22 @@ interface OrderItemRow {
   weight: string | null;
 }
 
+function asUtcIso(ts: string): string {
+  if (!ts) return ts;
+  // Already carries an offset ("Z" or "+05:30") — leave as is.
+  if (/(Z|[+-]\d{2}:?\d{2})$/.test(ts)) return ts;
+  return `${ts.replace(" ", "T")}Z`;
+}
+
 function toOrder(row: OrderRow, itemRows: OrderItemRow[]): Order {
   return {
     id: row.id,
     trackingId: row.trackingId,
     orderNumber: row.orderNumber ?? undefined,
-    createdAt: row.createdAt,
+    // "Order"."createdAt" is `timestamp WITHOUT time zone` holding UTC, so
+    // Supabase returns it with no "Z" — browsers then misread it as local
+    // (IST) time, showing every order 5h30m early. Mark it as UTC here.
+    createdAt: asUtcIso(row.createdAt),
     status: row.status,
     customer: {
       name: row.customerName,

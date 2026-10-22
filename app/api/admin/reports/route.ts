@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getReportRows, generateReportExcel, generateReportPdf } from "@/lib/reports";
+import { getReportRows, generateReportExcel, generateReportPdf, type ReportKind } from "@/lib/reports";
 
 // Copies bytes into a fresh, plain ArrayBuffer. Needed because both
 // exceljs (Buffer) and pdf-lib (Uint8Array) return byte arrays typed
@@ -12,7 +12,7 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return ab;
 }
 
-// GET /api/admin/reports?start=2026-01-01&end=2026-01-31&format=xlsx|pdf
+// GET /api/admin/reports?start=2026-01-01&end=2026-01-31&format=xlsx|pdf&type=sales|complimentary
 //
 // Custom date-range export of orders for the CEO's manual monthly/yearly
 // bookkeeping entry: order no., date, customer name, products ordered
@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
   const start = searchParams.get("start");
   const end = searchParams.get("end");
   const format = searchParams.get("format");
+  const kind: ReportKind = searchParams.get("type") === "complimentary" ? "complimentary" : "sales";
 
   if (!start || !end) {
     return NextResponse.json({ error: "Both 'start' and 'end' dates are required." }, { status: 400 });
@@ -35,29 +36,31 @@ export async function GET(req: NextRequest) {
 
   try {
     // Inclusive of the entire end date, not just midnight of it.
-    const startISO = new Date(`${start}T00:00:00`).toISOString();
-    const endISO = new Date(`${end}T23:59:59.999`).toISOString();
+    // Picked dates are IST calendar days; the server runs in UTC, so pin the offset.
+    const startISO = new Date(`${start}T00:00:00+05:30`).toISOString();
+    const endISO = new Date(`${end}T23:59:59.999+05:30`).toISOString();
 
-    const rows = await getReportRows(startISO, endISO);
+    const rows = await getReportRows(startISO, endISO, kind);
     const label = start === end ? start : `${start}_to_${end}`;
+    const filePrefix = kind === "complimentary" ? "Gitamri-Complimentary" : "Gitamri-Sales";
 
     if (format === "xlsx") {
-      const buf = await generateReportExcel(rows, label);
+      const buf = await generateReportExcel(rows, label, kind);
       return new NextResponse(toArrayBuffer(buf), {
         status: 200,
         headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "Content-Disposition": `attachment; filename="Gitamri-Orders-${label}.xlsx"`,
+          "Content-Disposition": `attachment; filename="${filePrefix}-${label}.xlsx"`,
         },
       });
     }
 
-    const pdfBytes = await generateReportPdf(rows, label);
+    const pdfBytes = await generateReportPdf(rows, label, kind);
     return new NextResponse(toArrayBuffer(pdfBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="Gitamri-Orders-${label}.pdf"`,
+        "Content-Disposition": `attachment; filename="${filePrefix}-${label}.pdf"`,
       },
     });
   } catch (err) {

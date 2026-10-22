@@ -17,11 +17,18 @@ export interface ReportRow {
   customerName: string;
   products: string; // "Red Chilli Pickle | 220g x1, Mango Pickle | 500g x2"
   gstValue: number; // total tax (CGST+SGST or IGST) for the whole order, in rupees
+  goodsValue: number; // list (selling) price x qty, before any discount — the value of goods given away on complimentary orders
   finalValue: number; // order.total — what the customer actually paid
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  // Runs on the server (UTC) — pin to IST so a 1 AM IST order isn't dated the previous day.
+  return new Date(iso).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 /**
@@ -63,21 +70,35 @@ function orderToReportRow(order: Order): ReportRow {
     customerName: order.customer.name,
     products: productParts.join(", "),
     gstValue: Math.round(gstTotalRupees * 100) / 100,
+    goodsValue: order.items.reduce((s, i) => s + i.price * i.quantity, 0),
     finalValue: order.total,
   };
 }
 
+/**
+ * "sales" = real sales only (COD + online). "complimentary" = FREE orders only.
+ * Kept as two separate reports so free samples never mix into sales figures.
+ */
+export type ReportKind = "sales" | "complimentary";
+
 /** Fetches orders in range and converts them to report rows, oldest first. */
-export async function getReportRows(startISO: string, endISO: string): Promise<ReportRow[]> {
+export async function getReportRows(startISO: string, endISO: string, kind: ReportKind = "sales"): Promise<ReportRow[]> {
   const orders = await getOrdersInRange(startISO, endISO);
-  return orders.map(orderToReportRow);
+  return orders
+    // Rule: every ₹0 order is complimentary, whatever its payment method.
+    .filter((o) => {
+      const isComp = o.paymentMethod === "FREE" || o.total === 0;
+      return kind === "complimentary" ? isComp : !isComp;
+    })
+    .map(orderToReportRow);
 }
 
 // ---------------------------------------------------------------
 // Excel
 // ---------------------------------------------------------------
 
-export async function generateReportExcel(rows: ReportRow[], label: string): Promise<Buffer> {
+export async function generateReportExcel(rows: ReportRow[], label: string, kind: ReportKind = "sales"): Promise<Buffer> {
+  const isComp = kind === "complimentary";
   const wb = new ExcelJS.Workbook();
   wb.creator = "Gitamri Maaji";
   wb.created = new Date();
@@ -89,7 +110,9 @@ export async function generateReportExcel(rows: ReportRow[], label: string): Pro
     { header: "Date", key: "date", width: 14 },
     { header: "Customer Name", key: "customerName", width: 28 },
     { header: "Products Ordered", key: "products", width: 50 },
-    { header: "GST Value (₹)", key: "gstValue", width: 16 },
+    isComp
+      ? { header: "Goods Value (₹)", key: "goodsValue", width: 16 }
+      : { header: "GST Value (₹)", key: "gstValue", width: 16 },
     { header: "Final Value (₹)", key: "finalValue", width: 16 },
   ];
 
@@ -105,11 +128,12 @@ export async function generateReportExcel(rows: ReportRow[], label: string): Pro
     customerName: "",
     products: "TOTAL",
     gstValue: rows.reduce((s, r) => s + r.gstValue, 0),
+    goodsValue: rows.reduce((s, r) => s + r.goodsValue, 0),
     finalValue: rows.reduce((s, r) => s + r.finalValue, 0),
   });
   totalsRow.font = { bold: true };
 
-  sheet.getColumn("gstValue").numFmt = "#,##0.00";
+  sheet.getColumn(isComp ? "goodsValue" : "gstValue").numFmt = "#,##0.00";
   sheet.getColumn("finalValue").numFmt = "#,##0.00";
 
   const buf = await wb.xlsx.writeBuffer();
@@ -120,7 +144,8 @@ export async function generateReportExcel(rows: ReportRow[], label: string): Pro
 // PDF
 // ---------------------------------------------------------------
 
-export async function generateReportPdf(rows: ReportRow[], label: string): Promise<Uint8Array> {
+export async function generateReportPdf(rows: ReportRow[], label: string, kind: ReportKind = "sales"): Promise<Uint8Array> {
+  const isComp = kind === "complimentary";
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -136,7 +161,7 @@ export async function generateReportPdf(rows: ReportRow[], label: string): Promi
     { key: "date" as const, label: "Date", x: MARGIN + 60, w: 60 },
     { key: "customerName" as const, label: "Customer Name", x: MARGIN + 120, w: 130 },
     { key: "products" as const, label: "Products Ordered", x: MARGIN + 250, w: 420 },
-    { key: "gstValue" as const, label: "GST (Rs.)", x: MARGIN + 670, w: 65 },
+    { key: "gstValue" as const, label: isComp ? "Goods (Rs.)" : "GST (Rs.)", x: MARGIN + 670, w: 65 },
     { key: "finalValue" as const, label: "Final (Rs.)", x: MARGIN + 735, w: 65 },
   ];
   const tableRight = MARGIN + 800;
@@ -145,7 +170,7 @@ export async function generateReportPdf(rows: ReportRow[], label: string): Promi
   let y = PAGE_H - MARGIN;
 
   function drawHeader() {
-    page.drawText(`Gitamri Maaji — Order Report (${label})`, {
+    page.drawText(`Gitamri Maaji — ${isComp ? "Complimentary Orders" : "Sales Report"} (${label})`, {
       x: MARGIN,
       y: y - 14,
       size: 13,
@@ -182,10 +207,10 @@ export async function generateReportPdf(rows: ReportRow[], label: string): Promi
     page.drawText(row.date, { x: cols[1].x, y, size: 8, font });
     page.drawText(truncate(row.customerName, 22), { x: cols[2].x, y, size: 8, font });
     page.drawText(truncate(row.products, 70), { x: cols[3].x, y, size: 8, font });
-    page.drawText(row.gstValue.toFixed(2), { x: cols[4].x, y, size: 8, font });
+    page.drawText((isComp ? row.goodsValue : row.gstValue).toFixed(2), { x: cols[4].x, y, size: 8, font });
     page.drawText(row.finalValue.toFixed(2), { x: cols[5].x, y, size: 8, font });
 
-    gstSum += row.gstValue;
+    gstSum += isComp ? row.goodsValue : row.gstValue;
     finalSum += row.finalValue;
     y -= ROW_H;
   }
