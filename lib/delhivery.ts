@@ -71,7 +71,7 @@ export async function createDelhiveryShipment(input: ShipmentInput): Promise<Shi
   }
 
  const productsDesc = input.items
-    .map((i) => `${i.name} x${i.quantity}`)
+    .map((i) => `${i.name}${i.weight ? ` (${i.weight})` : ""} x${i.quantity}`)
     .join(", ")
     .slice(0, 500); // Delhivery caps this field's length
   const totalQuantity = input.items.reduce((sum, i) => sum + i.quantity, 0);
