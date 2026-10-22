@@ -39,6 +39,25 @@ function shipmentDimensionsForItems(items: { weight?: string }[]) {
   if (hasAny220g) return JAR_DIMENSIONS_CM["220g"];
   return DEFAULT_JAR_DIMENSIONS;
 }
+/**
+ * PACKED WEIGHT PER JAR (grams) — jar + lid + packaging, weighed.
+ * Used for Delhivery's shipment `weight` field.
+ */
+const PACKED_WEIGHT_G: Record<string, number> = {
+  "200g": 0,
+  "220g": 0,
+  "500g": 0,
+  "1kg": 0,
+  "6x75g": 0,
+};
+const DEFAULT_PACKED_WEIGHT_G = PACKED_WEIGHT_G["500g"];
+
+function shipmentWeightForItems(items: { weight?: string; quantity: number }[]) {
+  return items.reduce((sum, i) => {
+    const perJar = (i.weight && PACKED_WEIGHT_G[i.weight]) || DEFAULT_PACKED_WEIGHT_G;
+    return sum + perJar * i.quantity;
+  }, 0);
+}
 
 interface ShipmentInput {
   orderId: string; // your tracking ID, used as Delhivery's order reference
@@ -76,6 +95,7 @@ export async function createDelhiveryShipment(input: ShipmentInput): Promise<Shi
     .slice(0, 500); // Delhivery caps this field's length
   const totalQuantity = input.items.reduce((sum, i) => sum + i.quantity, 0);
   const dims = shipmentDimensionsForItems(input.items);
+  const totalWeightGrams = shipmentWeightForItems(input.items);
 
   const payload = {
     shipments: [
@@ -103,6 +123,7 @@ export async function createDelhiveryShipment(input: ShipmentInput): Promise<Shi
         shipment_length: dims.length,
         shipment_width: dims.width,
         shipment_height: dims.height,
+        weight: totalWeightGrams, // packed weight in grams
       },
     ],
     pickup_location: { name: PICKUP_LOCATION },
