@@ -312,9 +312,11 @@ export async function getOrderByTrackingId(trackingId: string): Promise<Order | 
  * never ends up with two order rows.
  */
 export async function getOrderByRazorpayPaymentId(razorpayPaymentId: string): Promise<Order | undefined> {
+  // Cancelled rows are ignored — a manually cancelled duplicate must not
+  // shadow the live order for the same payment.
   const orderRows = await dbSelect<OrderRow>(
     "Order",
-    `select=*&razorpayPaymentId=eq.${encodeURIComponent(razorpayPaymentId)}`
+    `select=*&razorpayPaymentId=eq.${encodeURIComponent(razorpayPaymentId)}&status=neq.CANCELLED&limit=1`
   );
   if (orderRows.length === 0) return undefined;
 
@@ -379,6 +381,15 @@ async function findOrCreateGuestUser(name: string, email: string | null): Promis
 }
 
 export async function saveOrder(input: SaveOrderInput): Promise<Order> {
+  // Idempotency: one Razorpay payment = one order. Both POST /api/orders
+  // (browser) and the payment.captured webhook call saveOrder() for the
+  // same payment, often seconds apart — whichever lands second must get
+  // the existing order back, not create a duplicate.
+  if (input.razorpayPaymentId) {
+    const existing = await getOrderByRazorpayPaymentId(input.razorpayPaymentId);
+    if (existing) return existing;
+  }
+
   const guestUserId = await findOrCreateGuestUser(input.customer.name, input.customer.email || null);
 
   const trackingId = generateTrackingId();
@@ -393,7 +404,9 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
   // deliberately does that instead, for different reasons).
   const orderNumber = await dbRpc<number>("next_order_number");
 
-  const [orderRow] = await dbInsert<OrderRow>("Order", [
+  let orderRow: OrderRow;
+  try {
+    [orderRow] = await dbInsert<OrderRow>("Order", [
     {
       id: orderId,
       userId: guestUserId,
@@ -417,6 +430,16 @@ export async function saveOrder(input: SaveOrderInput): Promise<Order> {
       razorpayPaymentId: input.razorpayPaymentId || null,
     },
   ]);
+  } catch (err) {
+    // Race: both paths passed the check above at the same moment. The
+    // unique index order_razorpay_payment_active_key rejects the second
+    // insert with 23505 — return the order that won instead of failing.
+    if (input.razorpayPaymentId && err instanceof Error && err.message.includes("23505")) {
+      const winner = await getOrderByRazorpayPaymentId(input.razorpayPaymentId);
+      if (winner) return winner;
+    }
+    throw err;
+  }
 
   await dbInsert(
     "OrderItem",
