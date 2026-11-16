@@ -55,6 +55,11 @@ export default function ProductHero({ product, reviews }: { product: Product; re
               {formatPrice(displayMrp)}
             </span>
           )}
+          {product.showSavingsTag && displayMrp && displayMrp > displayPrice && (
+            <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-xs font-bold text-white">
+              {Math.round(((displayMrp - displayPrice) / displayMrp) * 100)}% OFF · Save {formatPrice(displayMrp - displayPrice)}
+            </span>
+          )}
         </div>
         {prepaidPrice !== null && (
           <p className="mt-1 text-sm font-semibold text-[#183F35]">

@@ -164,6 +164,13 @@ export default function ProductCard({ product }: { product: Product }) {
                 </span>
               )}
             </div>
+            {product.showSavingsTag && displayMrp && displayMrp > displayPrice && (
+              <p className="mt-1">
+                <span className="rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                  {Math.round(((displayMrp - displayPrice) / displayMrp) * 100)}% OFF · Save {formatPrice(displayMrp - displayPrice)}
+                </span>
+              </p>
+            )}
             {prepaidPrice !== null && (
               <p className="mt-0.5 text-xs font-semibold text-[#183F35]">
                 Get it upto {formatPrice(prepaidPrice)}

@@ -79,6 +79,7 @@ export interface Product {
   // (e.g. "Perfect for First-Time Buyers" on the Trial Pack). Takes the
   // same saffron badge styling as the others when present.
   customBadge?: string;
+  showSavingsTag?: boolean; // shows a red '% OFF - Save Rs.X' tag next to the price (MRP vs selling price)
   comingSoon?: boolean; // no photos/price yet — shown as a placeholder card, not purchasable
   ingredients: string[];
   nutrition: NutritionInfo;

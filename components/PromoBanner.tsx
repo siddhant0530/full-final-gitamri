@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Truck, Sparkles, Tag, Gift } from "lucide-react";
 
 /**
@@ -20,6 +21,20 @@ import { Truck, Sparkles, Tag, Gift } from "lucide-react";
 function OfferRow() {
   return (
     <div className="flex items-center shrink-0">
+      <Link
+        href="/products/makhana-pure"
+        className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-gold-50 tracking-[0.045em] hover:text-white"
+      >
+        <span className="animate-pulse rounded-full bg-gold-400 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-[#183F35]">
+          New Launch
+        </span>
+        <span>
+          Makhana Pure (Mithila Makhana) at{" "}
+          <span className="font-semibold text-gold-300">Flat ₹199</span>
+        </span>
+      </Link>
+
+      <span className="text-[7px] text-gold-400/45">◆</span>
       <span className="flex items-center gap-2.5 mx-8 sm:mx-12 text-[10.5px] sm:text-[13px] text-gold-50/95 tracking-[0.045em]">
         <Truck
           size={14}
@@ -70,7 +85,7 @@ function OfferRow() {
           <span className="font-semibold text-gold-300">
             15% Discount
           </span>{" "}
-          On all Prepaid Orders
+          On Prepaid Pickle Orders
         </span>
       </span>
 
