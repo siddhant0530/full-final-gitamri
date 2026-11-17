@@ -31,7 +31,7 @@ export default function ProductGallery({
 }
 
   return (
-    <div className="flex flex-col-reverse gap-3 md:flex-row">
+    <div className="flex min-w-0 flex-col-reverse gap-3 md:flex-row">
       <div className="flex gap-2 overflow-x-auto md:flex-col md:overflow-visible">
         {images.map((img, i) => (
           <button

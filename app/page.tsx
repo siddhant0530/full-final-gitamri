@@ -1,4 +1,5 @@
 import HeroBanner from "@/components/home/HeroBanner";
+import NewArrivalSpotlight from "@/components/home/NewArrivalSpotlight";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import TrialPackSection from "@/components/home/TrialPackSection";
 import FeaturedCategories from "@/components/home/FeaturedCategories";
@@ -21,6 +22,8 @@ export default async function Home() {
       <section className="relative">
         <HeroBanner />
       </section>
+
+      <NewArrivalSpotlight />
 
       <section className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 sm:pt-20 lg:px-8">
         <div className="mb-10 text-center">

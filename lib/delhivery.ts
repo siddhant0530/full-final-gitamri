@@ -44,19 +44,25 @@ function shipmentDimensionsForItems(items: { weight?: string }[]) {
  * Used for Delhivery's shipment `weight` field.
  */
 const PACKED_WEIGHT_G: Record<string, number> = {
+  "100g": 125, // Makhana Pure 100g pouch, packed
   "200g": 0,
   "220g": 0,
   "500g": 0,
   "1kg": 0,
   "6x75g": 0,
 };
-const DEFAULT_PACKED_WEIGHT_G = PACKED_WEIGHT_G["500g"];
 
 function shipmentWeightForItems(items: { weight?: string; quantity: number }[]) {
-  return items.reduce((sum, i) => {
-    const perJar = (i.weight && PACKED_WEIGHT_G[i.weight]) || DEFAULT_PACKED_WEIGHT_G;
-    return sum + perJar * i.quantity;
-  }, 0);
+  // Only send a weight when EVERY item's packed weight is known (> 0).
+  // If any item's weight is still 0 / unknown, return 0 so no weight is sent,
+  // rather than an under-reported total (e.g. makhana known, pickle jars not).
+  let total = 0;
+  for (const i of items) {
+    const perItem = i.weight ? PACKED_WEIGHT_G[i.weight] ?? 0 : 0;
+    if (!perItem) return 0;
+    total += perItem * i.quantity;
+  }
+  return total;
 }
 
 interface ShipmentInput {
